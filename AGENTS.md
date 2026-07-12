@@ -52,8 +52,10 @@ grid wasn't assembled. Two-page spreads photograph as one landscape image — re
 2. **Copy `beginning-sounds.html`** to a new file named after the topic, e.g. `naming-words.html`.
    Update the `<title>`, the `<h1>`, the panel `<summary>`, and the footer.
 3. **Turn the teaching content into a `WS.teach(title, html)` block** (see *Teaching blocks* below).
-4. **Turn each exercise type into a generator** using the closest primitive (see *Primitives*).
-   Give each a config key, a panel field, and a `WS.section(...)` call.
+4. **Turn every exercise into a section — reproduce them all, none skipped.** Auto-gradable exercises
+   become generators using the closest primitive (see *Primitives*); ungradable ones (drawing, open
+   writing, crosswords/word-searches) become **print-only, parent-graded** sections (see *Reproduce
+   every exercise*). Give each a config key, a panel field, and a `WS.section(...)` call.
 5. **Guarantee distinct questions** — draw content without replacement / index a shuffled pool by the
    question number (see *Determinism & no duplicates*). This is a hard, verified requirement.
 6. **Register the unit** for verification: add a `TARGETS` entry (and a `DUP_PARAMS` entry) in
@@ -70,9 +72,11 @@ grid wasn't assembled. Two-page spreads photograph as one landscape image — re
 >    only one tile of the grid — see *Step 0* above).
 > 1. Copy `beginning-sounds.html` to `<topic>.html` and update the title/heading/panel/footer.
 > 2. Extract the lesson/example at the top of the page into a `WS.teach(...)` block.
-> 3. For each exercise type on the page, write a generator using the closest primitive
->    (typed input / chip-select-one / chip-select-many / drag-to-order), one config key + panel field
->    + `WS.section(...)` call each. Reproduce the wording of the instructions faithfully.
+> 3. Reproduce EVERY exercise on the page — none skipped. Write a generator for each using the closest
+>    primitive (typed input / chip-select-one / chip-select-many / drag-to-order / matching), one config
+>    key + panel field + `WS.section(...)` call each. If an exercise can't be auto-graded (drawing, open
+>    writing, a crossword/word-search), include it as a print-only, parent-graded section instead of
+>    dropping it. Reproduce the wording of the instructions faithfully.
 > 4. Make every section produce **distinct** questions across its count (draw without replacement).
 > 5. Add a `TARGETS` + `DUP_PARAMS` entry in `verify/verify.js` and a card in `index.html`.
 > 6. Write `specs/<topic>.md` from the template.
@@ -142,23 +146,43 @@ chip-block is all-or-nothing.
 
 ---
 
-## Exercises that don't fit the four primitives
+## Reproduce every exercise — print-only for the ungradable ones
 
-Real workbook pages include tasks the auto-marker can't grade. When you hit one, either **adapt it** to
-the nearest gradable primitive, or render it **print-only** — emit it with no `.gradable` / `.chip` /
-`.dslot` markup, so marking ignores it (like a `WS.teach` block) and the child writes on the printout.
-Common cases in Primary-One English:
+**Never drop an exercise.** Reproduce every task on the workbook page. If it maps to a primitive, make it
+self-marking. If it genuinely can't be auto-graded — a drawing, open-ended writing, a crossword or
+word-search — include it as a **print-only, parent-graded** section: it prints for the child to do by
+hand, a grown-up marks it, and it carries **no** `.gradable` / `.chip` / `.dslot` markup, so the
+auto-marker ignores it (exactly like a `WS.teach` block). Prefer a faithful gradable adaptation when one
+exists, but a print-only section always beats omitting the exercise.
 
-| On the page | Why it doesn't fit | Do this |
+| On the page | Auto-gradable? | Do this |
 |---|---|---|
-| "Read and draw…", "Draw the missing item" | no text/selection answer | adapt → *tick / circle* the matching picture, or print-only |
-| "Make a sentence with…", "Ask a question using…" | open-ended, no single answer | print-only writing line |
-| Crossword / word-search ("colour the boxes to spell") | bespoke grid | print-only, or a bespoke widget wired at the verify `EXTENSION POINT` |
-| "Circle the noun **and** underline the verb" | two answers per item | two chip-blocks per item, or a custom marker via `extras` / `skip` |
-| "Match A → B" (verb→past tense, young→parent) | pairing | one chip-select-**one** block per left item (chips = the right column), or drag-to-order |
+| "Read and draw…", "Draw the missing item" | no | **print-only**: prompt + an empty `.drawbox` to draw in |
+| "Make a sentence…", "Ask a question…", "Answer the question…" | no (open) | **print-only**: prompt + a `.writeline` to write on |
+| Crossword / word-search / spelling-riddle grid | no | **print-only**: hand-reproduce the grid + its clues / word-list |
+| Trace the letters / copy the word | no | **print-only**: the word in a light outline to trace |
+| "Read the passage, then circle…" | partly | passage as print-only; make the circling a chip section if clean |
+| "Circle the noun **and** underline the verb" | yes | the annotation widget (two tools), or two chip-blocks |
+| "Match A → B" (verb→past, young→parent) | yes | the matching widget |
 
-If a section is entirely print-only, it has no gradable markup — so give it a count but **don't** add it
-to `TARGETS`/`DUP_PARAMS` marking expectations (it contributes 0 to the score).
+**Print-only section markup.** Give it a config key + count and render it with `WS.section(...)` like any
+section, but emit plain `.item`s with no gradable markup — a heading, the prompt, a `✍️` badge, and a
+blank space; draw items from a pool so they stay **distinct** across the count (the duplicate scanner
+still scans `.item`s):
+
+```javascript
+html += WS.teach('On paper ✍️', 'Do these on the printed sheet — a grown-up marks them.');
+html += WS.section('Draw the picture', cfg.draw, i => {
+  const t = DRAW[(i-1) % DRAW.length];                         // distinct prompt per item
+  return '<div class="item"><span class="label">'+i+'.</span> Draw <b>'+t+'</b>.'
+       + '<div class="drawbox"></div></div>';                  // .drawbox = bordered empty box (page <style>)
+});
+```
+
+A print-only section contributes **0** to the score, so it does **not** change the `happy N/N`
+expectation — you may still list its key in the verify params (it renders, the verifier only checks that
+the gradable items reach full marks with a clean console). Keep its `max`/dup-count ≤ its prompt pool so
+distinctness holds.
 
 **Reusable bespoke widgets (copy one instead of inventing).** Two custom interactions already exist:
 the **annotation widget** (`common-proper-nouns.html` — pick a tool, tap words to circle/tick/underline)

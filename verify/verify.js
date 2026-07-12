@@ -61,6 +61,12 @@ const TARGETS = [
     params: 'seed=verify&match=4&choose=4' },
   { name: 'places', file: 'places.html',
     params: 'seed=verify&match=4&choose=4' },
+  { name: 'adjectives', file: 'adjectives.html',
+    params: 'seed=verify&find=4&fit=4&draw=6' },
+  { name: 'adverbs', file: 'adverbs.html',
+    params: 'seed=verify&makely=4&choose=4&sentence=6' },
+  { name: 'prepositions', file: 'prepositions.html',
+    params: 'seed=verify&time=4&place=4&draw=6' },
 ];
 
 // Higher per-section counts used ONLY for duplicate detection — each kept <= its content-pool size,
@@ -86,6 +92,9 @@ const DUP_PARAMS = {
   'gender': 'match=6&choose=8',
   'homes': 'match=6&choose=8',
   'places': 'match=6&choose=8',
+  'adjectives': 'find=10&fit=10&draw=6',
+  'adverbs': 'makely=10&choose=8&sentence=6',
+  'prepositions': 'time=10&place=8&draw=6',
 };
 
 // Launch installed Chrome/Edge without downloading a browser.
