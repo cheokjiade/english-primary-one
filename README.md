@@ -19,7 +19,9 @@ Double-click any `.html` file to use it, or host the folder on GitHub Pages.
 This is the main workflow. Hand the photo (and, ideally, this repo) to a person or an AI agent and
 point them at **[`AGENTS.md`](AGENTS.md)** — the step-by-step guide. In short: copy
 `beginning-sounds.html`, turn the page's lesson into a `WS.teach(...)` block and each exercise into a
-generator, then run the verifier. Put source photos in an `input/` folder (git-ignored).
+generator, then run the verifier. Put source photos in an `input/` folder (git-ignored); if they are
+HEIC (most phone photos), convert them to JPG first — see [`AGENTS.md`](AGENTS.md) *Step 0* (`ffmpeg`
+mis-decodes iPhone HEICs; use `pillow-heif`).
 
 ## Layout
 

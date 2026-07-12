@@ -30,6 +30,22 @@ write **generators**: small functions that return HTML strings for one question 
 
 ## The photo → unit workflow
 
+**Step 0 — get readable photos.** Phone photos are usually **HEIC**, and iPhone HEICs are *grid-tiled*
+(one page is stored as a mosaic of ~60 small HEVC tiles). Most tools — **including `ffmpeg`** — decode
+only the *first tile*, silently giving you a useless corner crop that still looks like a (badly-framed)
+photo. Convert with **`pillow-heif`**, which assembles the grid and honours EXIF rotation:
+
+```python
+# python -m pip install --user pillow-heif pillow
+import pillow_heif; from PIL import Image, ImageOps
+pillow_heif.register_heif_opener()
+im = ImageOps.exif_transpose(Image.open("input/IMG_1234.HEIC")).convert("RGB")
+im.thumbnail((2000, 2000)); im.save("input/IMG_1234.jpg", quality=88)   # spreads are ~5712×4284
+```
+
+A full page should come out ~3000–5700 px on the long edge; if you get a ~640 px corner-sliver, the
+grid wasn't assembled. Two-page spreads photograph as one landscape image — read each half at full size.
+
 1. **Look at the photo.** Identify (a) any *teaching / example* content at the top of the page, and
    (b) each distinct *exercise type* (e.g. "write the first letter", "circle the correct word",
    "match", "put words in order").
@@ -50,6 +66,8 @@ write **generators**: small functions that return HTML strings for one question 
 
 > Here is a photo of a Primary-One English workbook page. Build a new unit in this repo following
 > `AGENTS.md`. Specifically:
+> 0. If the source photos are HEIC, convert them to JPG first with `pillow-heif` (`ffmpeg` decodes
+>    only one tile of the grid — see *Step 0* above).
 > 1. Copy `beginning-sounds.html` to `<topic>.html` and update the title/heading/panel/footer.
 > 2. Extract the lesson/example at the top of the page into a `WS.teach(...)` block.
 > 3. For each exercise type on the page, write a generator using the closest primitive
@@ -117,6 +135,30 @@ chip-block is all-or-nothing.
 - **Custom** — register your own with `WS.addKind('name', (value, answer) => boolean)` and put
   `data-kind="name"` on the input. The example adds `letter` (single letter, case-insensitive).
   Ideas: `startsWith`, `contains`, a phonics matcher, "ignore trailing punctuation".
+- **Case matters?** `text` and `letter` are **case-insensitive**, so they mark `singapore` right for
+  `Singapore`. For capitalisation exercises (proper nouns, "rewrite using capital letters for proper
+  nouns"), register a case-sensitive kind — `WS.addKind('cap', (v,a) => v.trim() === a.trim())` — and
+  put `data-kind="cap"` on the input.
+
+---
+
+## Exercises that don't fit the four primitives
+
+Real workbook pages include tasks the auto-marker can't grade. When you hit one, either **adapt it** to
+the nearest gradable primitive, or render it **print-only** — emit it with no `.gradable` / `.chip` /
+`.dslot` markup, so marking ignores it (like a `WS.teach` block) and the child writes on the printout.
+Common cases in Primary-One English:
+
+| On the page | Why it doesn't fit | Do this |
+|---|---|---|
+| "Read and draw…", "Draw the missing item" | no text/selection answer | adapt → *tick / circle* the matching picture, or print-only |
+| "Make a sentence with…", "Ask a question using…" | open-ended, no single answer | print-only writing line |
+| Crossword / word-search ("colour the boxes to spell") | bespoke grid | print-only, or a bespoke widget wired at the verify `EXTENSION POINT` |
+| "Circle the noun **and** underline the verb" | two answers per item | two chip-blocks per item, or a custom marker via `extras` / `skip` |
+| "Match A → B" (verb→past tense, young→parent) | pairing | one chip-select-**one** block per left item (chips = the right column), or drag-to-order |
+
+If a section is entirely print-only, it has no gradable markup — so give it a count but **don't** add it
+to `TARGETS`/`DUP_PARAMS` marking expectations (it contributes 0 to the score).
 
 ---
 
@@ -165,6 +207,11 @@ codepoint: `assets/twemoji/1f431.svg` = 🐱. No CDN, no system emoji (they rend
 device and wouldn't print reliably). To use an icon not yet bundled, download its Twemoji SVG into
 that folder named `<codepoint>.svg` and keep the CC-BY attribution (see `README.md`). Emoji used only
 as on-screen UI (🎲 ✅ 🖨️ 📘) are system glyphs and never appear on the printed worksheet.
+
+Reality check: real workbook pages lean on many **specific** pictures (particular animals, objects,
+occupations) that Twemoji only partly covers, and some page art (a labelled rocket, an owl full of
+answer boxes) has no icon equivalent at all. Budget to add a few SVGs per unit for the pictures the
+question actually *tests*, and prefer **text** wherever the picture is decorative rather than the answer.
 
 ---
 
