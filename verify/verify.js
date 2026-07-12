@@ -31,6 +31,8 @@ const TARGETS = [
     params: 'seed=verify&choose=4&fill=4' },
   { name: 'conjunctions', file: 'conjunctions.html',
     params: 'seed=verify&fill=4&choose=4' },
+  { name: 'simple-present-tense', file: 'simple-present-tense.html',
+    params: 'seed=verify&choose=4&form=4' },
 ];
 
 // Higher per-section counts used ONLY for duplicate detection — each kept <= its content-pool size,
@@ -41,6 +43,7 @@ const DUP_PARAMS = {
   'articles': 'aan=10&article=8',
   'subject-verb-agreement': 'choose=10&fill=8',
   'conjunctions': 'fill=10&choose=8',
+  'simple-present-tense': 'choose=10&form=8',
 };
 
 // Launch installed Chrome/Edge without downloading a browser.

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 10 — Simple Present Tense. Primary One English.
+     Built from beginning-sounds.html; see specs/simple-present-tense.md.
+     Two sections: choose the verb form (chip-select one) · form the verb (typed).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simple Present Tense — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:110px; }
+  .chip.vchip { font-size:16pt; min-width:64px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .hint { color:#8a8f98; font-family:Verdana,sans-serif; font-size:11pt; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔁 Simple Present Tense — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap the verb form that matches the subject.">Choose verb <input type="number" id="f-choose" min="0" max="12"></label>
+      <label data-tip="Write the verb correctly (add -s for one person or thing).">Form verb <input type="number" id="f-form" min="0" max="10"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Add <b>-s</b> to the verb for one person or thing (he, she, it); use the plain verb for I, you, or more than one. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Simple Present Tense</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔁⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 5), 0, 12),
+  form:   WS.clamp(WS.toInt(WS.Q.get('form'),   4), 0, 10) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: choose the correct verb form (chip-select, one answer) ---- */
+/* Add -s when the subject is one (he/she/it or a single noun); plain verb for I/you/plural. */
+const CHOOSE = [
+  {s:'He ___ to drink lemonade.',        opts:['like','likes'],   a:'likes'},
+  {s:'I often ___ to my cousin.',        opts:['write','writes'], a:'write'},
+  {s:'My teacher ___ us good manners.',  opts:['teach','teaches'], a:'teaches'},
+  {s:'Nurses ___ in a hospital.',        opts:['work','works'],   a:'work'},
+  {s:'You ___ every day.',               opts:['swim','swims'],   a:'swim'},
+  {s:'My father ___ to work every day.', opts:['drive','drives'], a:'drives'},
+  {s:'He ___ his car in the car park.',  opts:['park','parks'],   a:'parks'},
+  {s:'Benjamin ___ coins as a hobby.',   opts:['collect','collects'], a:'collects'},
+  {s:'Thomas ___ to play with robots.',  opts:['like','likes'],   a:'likes'},
+  {s:'Bees ___ in hives.',               opts:['live','lives'],   a:'live'},
+  {s:'A hen ___ eggs.',                  opts:['lay','lays'],     a:'lays'},
+  {s:'The girls ___ in the park.',       opts:['play','plays'],   a:'play'},
+  {s:'He ___ television every night.',   opts:['watch','watches'], a:'watches'},
+  {s:'The sun ___ brightly in the day.', opts:['shine','shines'], a:'shines'},
+  {s:'The stars ___ at night.',          opts:['shine','shines'], a:'shine'},
+  {s:'Mary ___ in the park.',            opts:['play','plays'],   a:'plays'},
+];
+const chooseOrder = shuffle(CHOOSE);
+function gChoose(i){
+  const t = chooseOrder[(i-1) % chooseOrder.length];
+  const chips = t.opts.map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: form the verb (typed input, default `text` kind). Singular subject -> add -s. ---- */
+const FORM = [
+  {s:'A hen ___ eggs.',                 base:'lay',   a:'lays'},
+  {s:'My father ___ the newspaper.',    base:'read',  a:'reads'},
+  {s:'My grandmother ___ the plants.',  base:'water', a:'waters'},
+  {s:'He ___ television every night.',  base:'watch', a:'watches'},
+  {s:'The dog ___ loudly.',             base:'bark',  a:'barks'},
+  {s:'She ___ to school every day.',    base:'walk',  a:'walks'},
+  {s:'The cat ___ milk.',               base:'drink', a:'drinks'},
+  {s:'The baby ___ in the cot.',        base:'sleep', a:'sleeps'},
+  {s:'My sister ___ the piano.',        base:'play',  a:'plays'},
+  {s:'A bird ___ in the sky.',          base:'fly',   a:'flies'},
+  {s:'The boy ___ his lunch.',          base:'eat',   a:'eats'},
+  {s:'The rabbit ___ quickly.',         base:'run',   a:'runs'},
+];
+const formOrder = shuffle(FORM);
+function gForm(i){
+  const t = formOrder[(i-1) % formOrder.length];
+  const parts = t.s.split('___');
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + parts[0] + '<input class="ans gradable" data-answer="'+t.a+'" type="text" autocomplete="off">' + parts[1]
+    + ' <span class="hint">(' + t.base + ')</span></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Simple present tense',
+  'The simple present tense shows something that happens often, or a fact.<br>'
+  + 'Add <b>-s</b> to the verb when the subject is <b>one</b> (he, she, it, or a single naming word): '
+  + '<i>The cat runs.</i><br>'
+  + 'Use the <b>plain</b> verb for <b>I</b>, <b>you</b>, or <b>more than one</b>: <i>The cats run.</i>');
+html += WS.section('Choose the correct verb', cfg.choose, gChoose);
+html += WS.section('Write the verb correctly', cfg.form, gForm);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • simple present tense';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['choose','form'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>
