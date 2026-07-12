@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 1 — Common and Proper Nouns (Primary One English).
+     Built from beginning-sounds.html; see specs/common-proper-nouns.md.
+     Five sections: write the noun · sort common/proper · circle & underline ·
+     fill the blanks (drag word-box) · rewrite with capital letters.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Common and Proper Nouns — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<style>
+  .qrow { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  img.pic { width:64px; height:64px; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:60px; }
+  input.ans.word { width:150px; }
+  /* annotation widget (sections 2 & 3) */
+  .atools { display:flex; gap:8px; margin:6px 0 12px; flex-wrap:wrap; }
+  .atool { font-family:Verdana,sans-serif; font-size:11pt; padding:5px 12px; border:2px solid #888; border-radius:8px; background:#fff; cursor:pointer; font-weight:bold; }
+  .atool.active { background:#dbeafe; border-color:var(--accent); }
+  .awords { line-height:2.4; }
+  .aword { display:inline-block; padding:2px 7px; margin:3px 3px; font-size:16pt; cursor:pointer; border:2px solid transparent; position:relative; }
+  .aword.mk-circle { border:2.5px solid #1d4ed8; border-radius:50%; }
+  .aword.mk-underline { border-bottom:3px solid #1d4ed8; }
+  .aword.mk-tick::after { content:'✓'; color:#1d4ed8; font-weight:bold; position:absolute; top:-11px; right:-3px; font-size:13pt; }
+  .aword.correct { background:#bbf7d0; } .aword.incorrect { background:#fecaca; }
+  /* section 4 word box */
+  .wordbox { font-weight:bold; font-family:Verdana,sans-serif; font-size:12pt; margin:4px 0; }
+  /* section 5 capital lines */
+  .caprow { display:block; margin-top:4px; }
+  .shown { color:#555; }
+  input.capline { display:block; width:100%; max-width:520px; font:inherit; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); margin-top:4px; }
+  @media print { .aword.correct, .aword.incorrect { background:#fff; } }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔠 Common &amp; Proper Nouns — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Look at the picture and write the naming (common) noun.">Write noun <input type="number" id="f-write" min="0" max="12"></label>
+      <label data-tip="Pick a tool, then tap each word: circle the common nouns, tick the proper nouns.">Sort <input type="number" id="f-sort" min="0" max="12"></label>
+      <label data-tip="In each sentence, circle the common nouns and underline the proper nouns.">Find <input type="number" id="f-find" min="0" max="8"></label>
+      <label data-tip="Drag the words from the box into the right blanks.">Fill blanks <input type="number" id="f-blank" min="0" max="8"></label>
+      <label data-tip="Rewrite each sentence with capital letters for the proper nouns.">Capitals <input type="number" id="f-capital" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Type words (capitals matter only in the last section); tap words to mark them; drag word tiles into blanks. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Common and Proper Nouns</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔠⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section (URL param + panel field + count + generator) ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  write:   WS.clamp(WS.toInt(WS.Q.get('write'),   4), 0, 12),
+  sort:    WS.clamp(WS.toInt(WS.Q.get('sort'),    4), 0, 12),
+  find:    WS.clamp(WS.toInt(WS.Q.get('find'),    3), 0, 8),
+  blank:   WS.clamp(WS.toInt(WS.Q.get('blank'),   4), 0, 8),
+  capital: WS.clamp(WS.toInt(WS.Q.get('capital'), 3), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { randInt, pick, shuffle, distinct, balanced } = WS.helpers(rng);
+
+/* case-sensitive sentence rewrite: same words in order (spelling counts; punctuation & non-capital
+   word case ignored) AND every word capitalised in the answer is capitalised the same way. */
+WS.addKind('capsentence', function(v, a){
+  const strip = w => w.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
+  const av = String(a).trim().split(/\s+/).map(strip).filter(Boolean);
+  const vv = String(v || '').trim().split(/\s+/).map(strip).filter(Boolean);
+  if (av.length !== vv.length) return false;
+  for (let i = 0; i < av.length; i++) {
+    if (av[i].toLowerCase() !== vv[i].toLowerCase()) return false;
+    if (/^[A-Z]/.test(av[i]) && av[i] !== vv[i]) return false;
+  }
+  return true;
+});
+
+/* ---- pictures (Twemoji, bundled offline) ---- */
+const TW  = cp => 'assets/twemoji/' + cp + '.svg';
+const img = cp => '<img class="obj" src="' + TW(cp) + '" alt="">';
+const pic = cp => '<img class="pic" src="' + TW(cp) + '" alt="">';
+
+/* ---- Section 1: write the naming word (typed input, default `text` kind) ---- */
+const WRITE = [
+  {cp:'1f4d5',w:'book'},{cp:'270f',w:'pencil'},{cp:'1f58d',w:'crayon'},{cp:'1f34e',w:'apple'},
+  {cp:'1f431',w:'cat'},{cp:'1f697',w:'car'},{cp:'1f986',w:'duck'},{cp:'1f41f',w:'fish'},
+  {cp:'2b50',w:'star'},{cp:'26f5',w:'boat'},{cp:'1f95a',w:'egg'},{cp:'1f41d',w:'bee'},
+  {cp:'1f426',w:'bird'},{cp:'1f430',w:'rabbit',alt:'bunny'},{cp:'1f438',w:'frog'},{cp:'1f370',w:'cake'},
+  {cp:'1f388',w:'balloon'},{cp:'1f3e0',w:'house'},{cp:'1f6a9',w:'flag'},{cp:'1f69a',w:'truck'},
+  {cp:'1f98b',w:'butterfly'},{cp:'1f343',w:'leaf'},{cp:'2601',w:'cloud'},{cp:'1f41a',w:'shell'},
+  {cp:'1f45d',w:'bag'},{cp:'1f4e6',w:'box'},{cp:'1f36a',w:'cookie'},
+];
+const writeOrder = shuffle(WRITE);
+function gWrite(i){
+  const t = writeOrder[(i-1) % writeOrder.length];
+  const ans = t.alt ? t.w + '|' + t.alt : t.w;
+  return '<div class="item"><span class="label">'+i+'.</span> Write the naming word for the picture.'
+    + '<div class="qrow">' + pic(t.cp)
+    + '<span class="field"><input class="ans word gradable" data-answer="'+ans+'" type="text" autocomplete="off"></span>'
+    + '</div></div>';
+}
+
+/* ---- Section 5: rewrite with capital letters (typed input, custom `capsentence` kind) ---- */
+const CAPS = [
+  {s:'singapore is an island.',        a:'Singapore is an island.'},
+  {s:'Have you been to china?',        a:'Have you been to China?'},
+  {s:'mr tan teaches english.',        a:'Mr Tan teaches English.'},
+  {s:'My uncle lives in japan.',       a:'My uncle lives in Japan.'},
+  {s:'lily is my best friend.',        a:'Lily is my best friend.'},
+  {s:'My name is ben wong.',           a:'My name is Ben Wong.'},
+  {s:'amy lives in australia.',        a:'Amy lives in Australia.'},
+  {s:'We climbed mount fuji.',         a:'We climbed Mount Fuji.'},
+  {s:'sara visited india.',            a:'Sara visited India.'},
+  {s:'My friend liam is from china.',  a:'My friend Liam is from China.'},
+  {s:'tim likes eric carle.',          a:'Tim likes Eric Carle.'},
+  {s:'We swam in the yellow river.',   a:'We swam in the Yellow River.'},
+  {s:'john plays with ben.',           a:'John plays with Ben.'},
+  {s:'Is olivia your sister?',         a:'Is Olivia your sister?'},
+];
+const capOrder = shuffle(CAPS);
+function gCapital(i){
+  const t = capOrder[(i-1) % capOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> Rewrite the sentence with a capital letter for each proper noun.'
+    + '<div class="caprow"><span class="shown">'+t.s+'</span>'
+    + '<input class="capline gradable" data-kind="capsentence" data-answer="'+t.a+'" type="text" autocomplete="off"></div></div>';
+}
+
+/* ---- Section 4: fill in the blanks (linked drag word-box, built-in slot marking) ---- */
+const BLANK = [
+  {s:'My sister colours with her ___.', a:'crayons'},
+  {s:'There are many ___ in the zoo.',  a:'animals'},
+  {s:'My brother takes a ___ to school.', a:'bus'},
+  {s:'Uncle Samy comes from ___.',      a:'India'},
+  {s:'Hens lay ___.',                   a:'eggs'},
+  {s:'A ___ makes honey.',              a:'bee'},
+  {s:'This ___ belongs to me.',         a:'bicycle'},
+  {s:'___ wrote the book.',             a:'Eric Carle'},
+  {s:'A ___ barks loudly.',             a:'dog'},
+  {s:'The ___ flies in the sky.',       a:'bird'},
+  {s:'I write with a ___.',             a:'pencil'},
+  {s:'We keep books on the ___.',       a:'shelf'},
+  {s:'The ___ swims in the pond.',      a:'fish'},
+  {s:'My ___ has four legs.',           a:'table'},
+];
+function buildBlank(count){
+  if (count <= 0) return '';
+  const chosen = shuffle(BLANK).slice(0, count);            // distinct frames + distinct answers
+  const src = shuffle(chosen.map(c => c.a)).map(w => '<div class="dtile" data-val="'+w+'">'+w+'</div>').join('');
+  const rows = chosen.map((c, k) => {
+    const parts = c.s.split('___');
+    return '<div class="item"><span class="label">'+(k+1)+'.</span> '
+      + parts[0] + '<span class="dslot" data-answer="'+c.a+'"></span>' + parts[1] + '</div>';
+  }).join('');
+  return '<h2>Fill in the blanks</h2>'
+    + '<div class="dorder"><div class="wordbox">Word box — drag each word into a blank:</div>'
+    + '<div class="dsource">'+src+'</div>' + rows + '</div>';
+}
+
+/* ---- annotation widget (sections 2 & 3): pick a tool, tap words to mark, tap again to clear ---- */
+function toolbar(properMark){
+  const properLabel = properMark === 'tick' ? '✓ tick (proper noun)' : '＿ underline (proper noun)';
+  return '<div class="atools no-print">'
+    + '<button type="button" class="atool" data-mark="circle">⭕ circle (common noun)</button>'
+    + '<button type="button" class="atool" data-mark="'+properMark+'">'+properLabel+'</button></div>';
+}
+function words(list){
+  return '<span class="awords">'
+    + list.map(w => '<span class="aword" data-type="'+w.type+'">'+w.t+'</span>').join(' ')
+    + '</span>';
+}
+function applyMarkClass(w){
+  w.classList.remove('mk-circle','mk-tick','mk-underline');
+  if (w.dataset.mark) w.classList.add('mk-' + w.dataset.mark);
+}
+function expectedMark(w){
+  const a = w.closest('.annot');
+  const t = w.dataset.type;
+  return t === 'common' ? 'circle' : (t === 'proper' ? a.dataset.proper : '');
+}
+function wireAnnot(){
+  document.querySelectorAll('.annot').forEach(a => {
+    const tools = a.querySelectorAll('.atool');
+    if (!tools.length) return;
+    let active = tools[0].dataset.mark; tools[0].classList.add('active');
+    tools.forEach(btn => btn.addEventListener('click', () => {
+      active = btn.dataset.mark; tools.forEach(b => b.classList.toggle('active', b === btn));
+    }));
+    a.querySelectorAll('.aword').forEach(w => w.addEventListener('click', () => {
+      w.dataset.mark = (w.dataset.mark || '') === active ? '' : active;
+      applyMarkClass(w);
+    }));
+  });
+}
+function resetAnnotations(){
+  document.querySelectorAll('.aword').forEach(w => { w.dataset.mark = ''; w.classList.remove('mk-circle','mk-tick','mk-underline','correct','incorrect'); });
+}
+window.__wsAutoSolve = function(){
+  document.querySelectorAll('.aword').forEach(w => { w.dataset.mark = expectedMark(w); applyMarkClass(w); });
+};
+function markSort(){ let total = 0, right = 0;
+  document.querySelectorAll('#sec-sort .aword').forEach(w => { total++;
+    const ok = (w.dataset.mark || '') === expectedMark(w);
+    w.classList.remove('correct','incorrect'); w.classList.add(ok ? 'correct' : 'incorrect'); if (ok) right++; });
+  return { total, right };
+}
+function markFind(){ let total = 0, right = 0;
+  document.querySelectorAll('#sec-find .item').forEach(row => { total++; let ok = true;
+    row.querySelectorAll('.aword').forEach(w => { const good = (w.dataset.mark || '') === expectedMark(w);
+      w.classList.remove('correct','incorrect'); w.classList.add(good ? 'correct' : 'incorrect'); if (!good) ok = false; });
+    if (ok) right++; });
+  return { total, right };
+}
+
+/* ---- Section 2: common or proper? (annotation widget, per-word) ---- */
+const SORTPOOL = [
+  {t:'banana',type:'common'},{t:'apple',type:'common'},{t:'chair',type:'common'},{t:'park',type:'common'},
+  {t:'boat',type:'common'},{t:'bear',type:'common'},{t:'cat',type:'common'},{t:'garden',type:'common'},
+  {t:'playground',type:'common'},{t:'ruler',type:'common'},{t:'book',type:'common'},{t:'pencil',type:'common'},
+  {t:'baby',type:'common'},{t:'ice cream',type:'common'},{t:'bird',type:'common'},{t:'ball',type:'common'},
+  {t:'flower',type:'common'},{t:'shoe',type:'common'},
+  {t:'Mount Everest',type:'proper'},{t:'Mr Tan',type:'proper'},{t:'Olivia',type:'proper'},{t:'China',type:'proper'},
+  {t:'Liam',type:'proper'},{t:'Japan',type:'proper'},{t:'Mount Fuji',type:'proper'},{t:'Yellow River',type:'proper'},
+  {t:'Singapore',type:'proper'},{t:'Eric Carle',type:'proper'},{t:'Australia',type:'proper'},{t:'Amy',type:'proper'},
+  {t:'Sue',type:'proper'},{t:'Tim',type:'proper'},{t:'John',type:'proper'},{t:'Pam',type:'proper'},
+  {t:'India',type:'proper'},{t:'Ben Wong',type:'proper'},
+];
+function buildSort(count){
+  if (count <= 0) return '';
+  const chosen = shuffle(SORTPOOL).slice(0, count);   // distinct words, drawn without replacement
+  return '<h2>Common or proper?</h2>'
+    + '<div id="sec-sort" class="annot" data-proper="tick">'
+    + '<p class="shown no-print">Circle the common nouns. Put a tick on the proper nouns.</p>'
+    + toolbar('tick') + '<div class="awords-wrap">' + words(chosen) + '</div></div>';
+}
+
+/* ---- Section 3: circle common, underline proper (annotation widget, per-sentence) ---- */
+const FIND = [
+  [['Sue','proper'],['borrows','none'],['books','common'],['from','none'],['the','none'],['library','common']],
+  [['John','proper'],['plays','none'],['football','common'],['and','none'],['basketball','common']],
+  [['Evan','proper'],['and','none'],['his','none'],['brother','common'],['live','none'],['in','none'],['Australia','proper']],
+  [['Lilian','proper'],['likes','none'],['apples','common'],['and','none'],['oranges','common']],
+  [['Pam','proper'],['cycles','none'],['in','none'],['the','none'],['park','common']],
+  [['Tim','proper'],['reads','none'],['a','none'],['book','common']],
+  [['Amy','proper'],['sews','none'],['beautiful','none'],['dresses','common']],
+  [['My','none'],['friend','common'],['lives','none'],['in','none'],['Japan','proper']],
+  [['Sara','proper'],['plays','none'],['with','none'],['a','none'],['ball','common']],
+  [['We','none'],['visited','none'],['China','proper']],
+  [['The','none'],['dog','common'],['runs','none'],['in','none'],['the','none'],['garden','common']],
+  [['Ben','proper'],['feeds','none'],['the','none'],['cat','common']],
+  [['Nina','proper'],['paints','none'],['a','none'],['flower','common']],
+];
+function buildFind(count){
+  if (count <= 0) return '';
+  const chosen = shuffle(FIND).slice(0, count);
+  const rows = chosen.map((sent, k) => {
+    const list = sent.map(pair => ({ t: pair[0], type: pair[1] }));
+    return '<div class="item"><span class="label">'+(k+1)+'.</span> ' + words(list) + '</div>';
+  }).join('');
+  return '<h2>Circle the common noun, underline the proper noun</h2>'
+    + '<div id="sec-find" class="annot" data-proper="underline">' + toolbar('underline') + rows + '</div>';
+}
+
+/* ---- build the sheet: teach, then practise (order = pedagogical 1 → 5) ---- */
+let html = '';
+html += WS.teach('Common and proper nouns',
+  'A <b>common noun</b> is a person, place, animal or thing.<br>'
+  + 'A <b>proper noun</b> is a special name for a common noun, and it begins with a <b>capital letter</b>.<br>'
+  + '<span class="ex"><u>Colin</u> works as a <b>dentist</b>. → <b>Colin</b> = proper noun, <b>dentist</b> = common noun</span>');
+html += WS.section('Write the naming word', cfg.write, gWrite);
+html += buildSort(cfg.sort);
+html += buildFind(cfg.find);
+html += buildBlank(cfg.blank);
+html += WS.teach('Capital letters', 'A proper noun always begins with a <b>capital letter</b>. Read each sentence and write it correctly.');
+html += WS.section('Rewrite with capital letters', cfg.capital, gCapital);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • common & proper nouns';
+
+/* ---- wiring (shared engine + this unit's bespoke pieces) ---- */
+wireAnnot();             // annotation widgets (sections 2 & 3)
+WS.enableDragOrder();    // drag / tap-to-place tiles (section 4)
+WS.wirePanel(cfg, ['write','sort','find','blank','capital'], {
+  mark:  () => WS.mark({ extras: [markSort, markFind] }),
+  clear: () => WS.clearAll(resetAnnotations),
+});
+</script>
+</body>
+</html>
