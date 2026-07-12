@@ -43,6 +43,12 @@ const TARGETS = [
     params: 'seed=verify&subject=4&object=4' },
   { name: 'possessive-pronouns', file: 'possessive-pronouns.html',
     params: 'seed=verify&adjective=4&pronoun=4' },
+  { name: 'simple-past-tense', file: 'simple-past-tense.html',
+    params: 'seed=verify&match=4&past=4' },
+  { name: 'question-words', file: 'question-words.html',
+    params: 'seed=verify&choose=4&pick=4' },
+  { name: 'demonstratives', file: 'demonstratives.html',
+    params: 'seed=verify&singular=4&plural=4' },
 ];
 
 // Higher per-section counts used ONLY for duplicate detection — each kept <= its content-pool size,
@@ -59,6 +65,9 @@ const DUP_PARAMS = {
   'countable-uncountable-nouns': 'much=8&few=8',
   'personal-pronouns': 'subject=10&object=8',
   'possessive-pronouns': 'adjective=8&pronoun=8',
+  'simple-past-tense': 'match=6&past=8',
+  'question-words': 'choose=10&pick=8',
+  'demonstratives': 'singular=10&plural=8',
 };
 
 // Launch installed Chrome/Edge without downloading a browser.

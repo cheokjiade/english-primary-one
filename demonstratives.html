@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Demonstrative Pronouns (this / that / these / those). Primary One English.
+     Built from subject-verb-agreement.html; see specs/demonstratives.md.
+     Two sections: this or that? (chip-select one) · these or those? (chip-select one).
+     The workbook uses a picture for near/far; here a text clue ("next to me" /
+     "over there") supplies the proximity so every item is self-marking.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demonstrative Pronouns — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:60px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>👉 Demonstrative Pronouns — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap 'This' (one, near) or 'That' (one, far) for each sentence.">this or that? <input type="number" id="f-singular" min="0" max="12"></label>
+      <label data-tip="Tap 'These' (many, near) or 'Those' (many, far) for each sentence.">these or those? <input type="number" id="f-plural" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap 'This' / 'That' (one thing) or 'These' / 'Those' (many things). Use <b>this</b>/<b>these</b> for things <b>near</b> you and <b>that</b>/<b>those</b> for things <b>far</b> away. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Demonstrative Pronouns</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 👉⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  singular: WS.clamp(WS.toInt(WS.Q.get('singular'), 4), 0, 12),
+  plural:   WS.clamp(WS.toInt(WS.Q.get('plural'),   4), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: this or that? (chip-select, one answer) ---- */
+/* Singular demonstrative -> this (one, near) or that (one, far). Proximity is in the sentence. */
+const SINGULAR = [
+  {s:'___ book next to me is new.',            a:'This'},
+  {s:'___ mountain far away is tall.',         a:'That'},
+  {s:'___ puppy in my arms is cute.',          a:'This'},
+  {s:'___ aeroplane high in the sky is fast.', a:'That'},
+  {s:'___ cup in my hand is hot.',             a:'This'},
+  {s:'___ tree on the hill is tall.',          a:'That'},
+  {s:'___ pencil on my desk is mine.',         a:'This'},
+  {s:'___ bird over there is singing.',        a:'That'},
+  {s:'___ cake in front of me smells nice.',   a:'This'},
+  {s:'___ house across the road is big.',      a:'That'},
+  {s:'___ kitten beside me is sleeping.',      a:'This'},
+  {s:'___ star far up in the sky is bright.',  a:'That'},
+];
+const singularOrder = shuffle(SINGULAR);
+function gSingular(i){
+  const t = singularOrder[(i-1) % singularOrder.length];
+  const chips = ['This','That'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: these or those? (chip-select, one answer) ---- */
+/* Plural demonstrative -> these (many, near) or those (many, far). Proximity is in the sentence. */
+const PLURAL = [
+  {s:'___ cookies in my hand smell nice.',         a:'These'},
+  {s:'___ birds over there are sparrows.',         a:'Those'},
+  {s:'___ toys next to me are mine.',              a:'These'},
+  {s:'___ mountains far away are high.',           a:'Those'},
+  {s:'___ shoes on my feet are new.',              a:'These'},
+  {s:'___ children across the field are playing.', a:'Those'},
+  {s:'___ books on my lap are heavy.',             a:'These'},
+  {s:'___ clouds high in the sky are grey.',       a:'Those'},
+  {s:'___ flowers beside me smell sweet.',         a:'These'},
+  {s:'___ cars far down the road are fast.',       a:'Those'},
+  {s:'___ sweets in my bag are tasty.',            a:'These'},
+  {s:'___ stars far away are twinkling.',          a:'Those'},
+];
+const pluralOrder = shuffle(PLURAL);
+function gPlural(i){
+  const t = pluralOrder[(i-1) % pluralOrder.length];
+  const chips = ['These','Those'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Demonstrative pronouns',
+  'Demonstrative pronouns point to things.<br>'
+  + 'Use <b>this</b> (one, <b>near</b>) and <b>that</b> (one, <b>far</b>).<br>'
+  + 'Use <b>these</b> (many, <b>near</b>) and <b>those</b> (many, <b>far</b>).');
+html += WS.section('this or that?', cfg.singular, gSingular);
+html += WS.section('these or those?', cfg.plural, gPlural);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • demonstrative pronouns';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['singular','plural'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

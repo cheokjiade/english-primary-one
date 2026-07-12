@@ -160,6 +160,15 @@ Common cases in Primary-One English:
 If a section is entirely print-only, it has no gradable markup — so give it a count but **don't** add it
 to `TARGETS`/`DUP_PARAMS` marking expectations (it contributes 0 to the score).
 
+**Reusable bespoke widgets (copy one instead of inventing).** Two custom interactions already exist:
+the **annotation widget** (`common-proper-nouns.html` — pick a tool, tap words to circle/tick/underline)
+and the **matching widget** (`simple-past-tense.html` — tap-to-connect two columns, drawn with SVG
+lines). Both follow one contract: a custom marker passed via `WS.mark({ extras:[fn] })` (each returns
+`{total, right}` and paints itself), reset wired through `WS.clearAll(resetFn)`, and a page-level
+**`window.__wsAutoSolve()`** that fills in the correct answers. The verifier's `EXTENSION POINT` calls
+`window.__wsAutoSolve()`, so the happy path can complete *any* bespoke widget with no verifier change.
+The matching widget is the one to copy for vocabulary units (young→parent, place→description, job→clue).
+
 ---
 
 ## Teaching blocks

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Question Words. Primary One English.
+     Built from simple-present-tense.html; see specs/question-words.md.
+     Two sections, both chip-select one with three options each:
+     choose the question word · which question word fits.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question Words — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:60px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .hint { color:#8a8f98; font-family:Verdana,sans-serif; font-size:11pt; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>❓ Question Words — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap the question word that fits the sentence.">Choose word <input type="number" id="f-choose" min="0" max="12"></label>
+      <label data-tip="Tap the question word that fits the sentence.">Which fits <input type="number" id="f-pick" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Question words ask about things, places, people, times, choices, owners and reasons. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Question Words</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! ❓⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 12),
+  pick:   WS.clamp(WS.toInt(WS.Q.get('pick'),   4), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: choose the question word (chip-select one, three options each) ---- */
+/* Each item carries its own opts array of three; exactly one equals a. */
+const CHOOSE = [
+  {s:'___ is your name?',                        opts:['What','Where','When'],  a:'What'},
+  {s:'___ do you live?',                         opts:['Where','Who','What'],   a:'Where'},
+  {s:'___ sang the song just now?',              opts:['Who','What','Where'],   a:'Who'},
+  {s:'___ is your birthday?',                    opts:['When','Where','What'],  a:'When'},
+  {s:'___ pencil is yours, the red or the blue?',opts:['Which','Who','What'],   a:'Which'},
+  {s:'___ bag is this?',                         opts:['Whose','Who','Where'],  a:'Whose'},
+  {s:'___ are you crying?',                      opts:['Why','What','When'],    a:'Why'},
+  {s:'___ time do you wake up?',                 opts:['What','Who','Where'],   a:'What'},
+  {s:'___ is the library?',                      opts:['Where','When','Who'],   a:'Where'},
+  {s:'___ is your best friend?',                 opts:['Who','What','When'],    a:'Who'},
+  {s:'___ did the show start?',                  opts:['When','Where','Which'], a:'When'},
+  {s:'___ is Tammy angry?',                      opts:['Why','Who','What'],     a:'Why'},
+];
+const chooseOrder = shuffle(CHOOSE);
+function gChoose(i){
+  const t = chooseOrder[(i-1) % chooseOrder.length];
+  const chips = t.opts.map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: which question word fits (chip-select one, three options each) ---- */
+const PICK = [
+  {s:'___ book do you want, this or that?',         opts:['Which','What','Whose'],  a:'Which'},
+  {s:'___ umbrella is this?',                       opts:['Whose','Who','Which'],   a:'Whose'},
+  {s:'___ is the sky blue?',                        opts:['Why','What','When'],     a:'Why'},
+  {s:'___ are you going after school?',             opts:['Where','When','Who'],    a:'Where'},
+  {s:'___ is knocking at the door?',                opts:['Who','What','Where'],    a:'Who'},
+  {s:'___ do we eat breakfast?',                    opts:['When','Where','Which'],  a:'When'},
+  {s:'___ is your favourite food?',                 opts:['What','Who','When'],     a:'What'},
+  {s:'___ shoes are these?',                        opts:['Whose','Which','Who'],   a:'Whose'},
+  {s:'___ pet do you like, the cat or the dog?',    opts:['Which','What','Whose'],  a:'Which'},
+  {s:'___ did you miss the bus?',                   opts:['Why','When','Where'],    a:'Why'},
+];
+const pickOrder = shuffle(PICK);
+function gPick(i){
+  const t = pickOrder[(i-1) % pickOrder.length];
+  const chips = t.opts.map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Question words',
+  'We use question words to ask questions:<br>'
+  + '<b>what</b> (a thing), <b>where</b> (a place), <b>who</b> (a person), '
+  + '<b>when</b> (a time), <b>which</b> (a choice), <b>whose</b> (who owns it), '
+  + '<b>why</b> (a reason).');
+html += WS.section('Choose the question word', cfg.choose, gChoose);
+html += WS.section('Which question word fits?', cfg.pick, gPick);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • question words';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['choose','pick'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>
