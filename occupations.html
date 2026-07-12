@@ -25,6 +25,9 @@
   .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
   .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
   @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+  .wsgrid { display:inline-block; border:2px solid #888; margin-top:6px; }
+  .wsrow { display:flex; }
+  .wscell { width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-family:'Courier New',monospace; font-size:13pt; border:0.5px solid #ddd; text-transform:uppercase; }
 </style>
 </head>
 <body>
@@ -36,6 +39,7 @@
       <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
       <label data-tip="Tap a word on the left, then tap its match on the right.">Match <input type="number" id="f-match" min="0" max="6"></label>
       <label data-tip="Tap the correct word.">Choose <input type="number" id="f-choose" min="0" max="8"></label>
+      <label data-tip="Print-only word search: the child finds the words; a grown-up marks it.">Word search ✍️ <input type="number" id="f-puzzle" min="0" max="1"></label>
     </div>
     <div class="btns">
       <button class="go" id="b-apply">Generate</button>
@@ -61,7 +65,8 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 
 const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
   match:  WS.clamp(WS.toInt(WS.Q.get('match'),  5), 0, 6),
-  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8) };
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8),
+  puzzle: WS.clamp(WS.toInt(WS.Q.get('puzzle'), 1), 0, 1) };
 
 const rng = WS.makeRng(cfg.seed);
 const { shuffle } = WS.helpers(rng);
@@ -160,6 +165,20 @@ function gChoose(i){
     + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
 }
 
+/* ---- print-only: word search (parent-graded — no gradable markup) ---- */
+function buildPuzzle(){
+  const words = ['baker','doctor','nurse','pilot','barber','hawker','florist','cobbler'];
+  const N = 12, grid = Array.from({length:N}, () => Array(N).fill(''));
+  const dirs = [[0,1],[1,0]];
+  words.forEach(w => { for (let t=0;t<80;t++){ const d=dirs[Math.floor(rng()*2)], r=Math.floor(rng()*N), c=Math.floor(rng()*N);
+    if (r+d[0]*(w.length-1)>=N || c+d[1]*(w.length-1)>=N) continue;
+    let ok=true; for (let k=0;k<w.length;k++){ const cur=grid[r+d[0]*k][c+d[1]*k]; if (cur && cur!==w[k]){ ok=false; break; } }
+    if (!ok) continue; for (let k=0;k<w.length;k++) grid[r+d[0]*k][c+d[1]*k]=w[k]; break; } });
+  const AZ='abcdefghijklmnopqrstuvwxyz';
+  const rows = grid.map(row => '<div class="wsrow">'+row.map(ch => '<span class="wscell">'+(ch||AZ[Math.floor(rng()*26)])+'</span>').join('')+'</div>').join('');
+  return '<div class="item">Find and circle these words in the puzzle: <b>'+words.join(', ')+'</b>.<div class="wsgrid">'+rows+'</div></div>';
+}
+
 /* ---- build the sheet ---- */
 let html = '';
 html += WS.teach('Occupations',
@@ -167,6 +186,8 @@ html += WS.teach('Occupations',
   + 'A <b>baker</b> bakes bread; a <b>doctor</b> treats the sick; a <b>pilot</b> flies planes.');
 html += buildMatch(cfg.match);
 html += WS.section('Who am I?', cfg.choose, gChoose);
+html += WS.teach('On paper ✍️', 'Do the word search on the printed sheet — a grown-up marks it.');
+if (cfg.puzzle > 0) html += '<h2>Word search</h2>' + buildPuzzle();
 
 document.getElementById('sheet').innerHTML = html;
 document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • occupations';
@@ -174,7 +195,7 @@ document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Prim
 /* ---- wiring ---- */
 wireMatch();
 WS.wireChips();
-WS.wirePanel(cfg, ['match','choose'], {
+WS.wirePanel(cfg, ['match','choose','puzzle'], {
   mark:  () => WS.mark({ extras: [markMatch] }),
   clear: () => WS.clearAll(resetMatch),
 });

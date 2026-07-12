@@ -25,6 +25,9 @@
   .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
   .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
   @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+  .lrow { display:inline-flex; gap:3px; vertical-align:middle; }
+  .lbox { width:24px; height:30px; border:1.5px solid #999; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:14pt; }
+  .lbox.given { background:#eef; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -36,6 +39,7 @@
       <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
       <label data-tip="Tap what you do, then tap the place to join them.">Match <input type="number" id="f-match" min="0" max="6"></label>
       <label data-tip="Tap the correct place.">Choose <input type="number" id="f-choose" min="0" max="8"></label>
+      <label data-tip="Print-only riddles: the child spells each word; a grown-up marks it.">Riddles ✍️ <input type="number" id="f-puzzle" min="0" max="1"></label>
     </div>
     <div class="btns">
       <button class="go" id="b-apply">Generate</button>
@@ -61,7 +65,8 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 
 const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
   match:  WS.clamp(WS.toInt(WS.Q.get('match'),  5), 0, 6),
-  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8) };
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8),
+  puzzle: WS.clamp(WS.toInt(WS.Q.get('puzzle'), 1), 0, 1) };
 
 const rng = WS.makeRng(cfg.seed);
 const { shuffle } = WS.helpers(rng);
@@ -160,6 +165,13 @@ function gChoose(i){
     + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
 }
 
+/* ---- print-only: solve the riddles (parent-graded — no gradable markup) ---- */
+function buildPuzzle(){
+  const R = [{c:'Cakes and bread are made here.',w:'bakery'},{c:'Birds are kept here.',w:'aviary'},{c:'Food and drinks are sold here.',w:'cafe'},{c:'Cars are kept here.',w:'garage'},{c:'Films are shown here.',w:'cinema'},{c:'Soldiers live here.',w:'camp'}];
+  return R.map((r,i) => { const boxes = r.w.split('').map((ch,k) => '<span class="lbox'+(k===0?' given':'')+'">'+(k===0?ch:'')+'</span>').join('');
+    return '<div class="item"><span class="label">'+(i+1)+'.</span> '+r.c+' <span class="lrow">'+boxes+'</span></div>'; }).join('');
+}
+
 /* ---- build the sheet ---- */
 let html = '';
 html += WS.teach('Places',
@@ -167,6 +179,8 @@ html += WS.teach('Places',
   + 'We watch films at the <b>cinema</b>, borrow books at the <b>library</b>, and see fish at the <b>aquarium</b>.');
 html += buildMatch(cfg.match);
 html += WS.section('Choose the place', cfg.choose, gChoose);
+html += WS.teach('On paper ✍️', 'Solve the riddles on the printed sheet — a grown-up marks them.');
+if (cfg.puzzle > 0) html += '<h2>Solve the riddles</h2>' + buildPuzzle();
 
 document.getElementById('sheet').innerHTML = html;
 document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • places';
@@ -174,7 +188,7 @@ document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Prim
 /* ---- wiring ---- */
 wireMatch();
 WS.wireChips();
-WS.wirePanel(cfg, ['match','choose'], {
+WS.wirePanel(cfg, ['match','choose','puzzle'], {
   mark:  () => WS.mark({ extras: [markMatch] }),
   clear: () => WS.clearAll(resetMatch),
 });
