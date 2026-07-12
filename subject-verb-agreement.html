@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 9 — Subject-Verb Agreement (is / are). Primary One English.
+     Built from beginning-sounds.html; see specs/subject-verb-agreement.md.
+     Two sections: choose is/are (chip-select one) · fill is/are (typed).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subject-Verb Agreement (is, are) — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:64px; }
+  .chip.vchip { font-size:16pt; min-width:56px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🧩 Subject-Verb Agreement — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap 'is' (one) or 'are' (more than one) for each sentence.">Choose is/are <input type="number" id="f-choose" min="0" max="12"></label>
+      <label data-tip="Write 'is' or 'are' to match the subject.">Fill is/are <input type="number" id="f-fill" min="0" max="10"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap or type 'is' / 'are' (not case-sensitive). A singular subject uses <b>is</b>; a plural subject uses <b>are</b>. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Subject-Verb Agreement</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🧩⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 5), 0, 12),
+  fill:   WS.clamp(WS.toInt(WS.Q.get('fill'),   4), 0, 10) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: choose is or are (chip-select, one answer) ---- */
+/* Singular subject (one) -> is ; plural subject (more than one) -> are. */
+const CHOOSE = [
+  {s:'The boy ___ sleeping.',            a:'is'},
+  {s:'The boys ___ sleeping.',           a:'are'},
+  {s:'This egg ___ rotten.',             a:'is'},
+  {s:'These eggs ___ rotten.',           a:'are'},
+  {s:'That balloon ___ mine.',           a:'is'},
+  {s:'Those balloons ___ mine.',         a:'are'},
+  {s:'The baby ___ crying.',             a:'is'},
+  {s:'The babies ___ all crying.',       a:'are'},
+  {s:'The child ___ in the classroom.',  a:'is'},
+  {s:'The children ___ in the classroom.', a:'are'},
+  {s:'There ___ many pupils in my class.', a:'are'},
+  {s:'These flowers ___ beautiful.',     a:'are'},
+  {s:'Those oranges ___ rotten.',        a:'are'},
+  {s:'The watch ___ kept in the drawer.', a:'is'},
+  {s:'My father ___ a pilot.',           a:'is'},
+  {s:'The policeman ___ in the patrol car.', a:'is'},
+  {s:'The cows ___ grazing in the field.', a:'are'},
+];
+const chooseOrder = shuffle(CHOOSE);
+function gChoose(i){
+  const t = chooseOrder[(i-1) % chooseOrder.length];
+  const chips = ['is','are'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: fill in is or are (typed input, default `text` kind) ---- */
+const FILL = [
+  {s:'These books ___ new.',              a:'are'},
+  {s:'The girl ___ very polite.',         a:'is'},
+  {s:'The markers ___ for my teacher.',   a:'are'},
+  {s:'There ___ a few ducks in the pond.', a:'are'},
+  {s:'Butterflies ___ beautiful insects.', a:'are'},
+  {s:'There ___ many bees in the garden.', a:'are'},
+  {s:'The hamster ___ in the cage.',      a:'is'},
+  {s:'There ___ a boy at the door.',      a:'is'},
+  {s:'The dog ___ barking loudly.',       a:'is'},
+  {s:'The students ___ in the hall.',     a:'are'},
+  {s:'My new shoes ___ red.',             a:'are'},
+  {s:'The sun ___ very hot today.',       a:'is'},
+];
+const fillOrder = shuffle(FILL);
+function gFill(i){
+  const t = fillOrder[(i-1) % fillOrder.length];
+  const parts = t.s.split('___');
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + parts[0] + '<input class="ans gradable" data-answer="'+t.a+'" type="text" maxlength="3" autocomplete="off">' + parts[1]
+    + '</div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Subject-verb agreement',
+  'The subject and its verb must agree.<br>'
+  + 'Use <b>is</b> when the subject is <b>singular</b> (one): <i>The boy is here.</i><br>'
+  + 'Use <b>are</b> when the subject is <b>plural</b> (more than one): <i>The boys are here.</i>');
+html += WS.section('Choose: is or are', cfg.choose, gChoose);
+html += WS.section('Fill in: is or are', cfg.fill, gFill);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • subject-verb agreement';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['choose','fill'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

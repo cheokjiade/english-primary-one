@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 16 — Conjunctions (and, but, or). Primary One English.
+     Built from beginning-sounds.html; see specs/conjunctions.md.
+     Two sections: fill and/but/or (typed) · choose and/but/or (chip-select one).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conjunctions (and, but, or) — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:70px; }
+  .chip.cchip { font-size:16pt; min-width:58px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔗 Conjunctions (and, but, or) — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Write 'and', 'but' or 'or' in each blank.">Fill in <input type="number" id="f-fill" min="0" max="12"></label>
+      <label data-tip="Tap the correct joining word — and, but or or.">Choose <input type="number" id="f-choose" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Type or tap <b>and</b> (goes together), <b>but</b> (a contrast) or <b>or</b> (a choice). Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Conjunctions: and, but, or</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔗⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  fill:   WS.clamp(WS.toInt(WS.Q.get('fill'),   5), 0, 12),
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: fill in and / but / or (typed input, default `text` kind) ---- */
+/* and = goes together ; but = a contrast ; or = a choice. */
+const FILL = [
+  {s:'I like toy cars ___ planes.',                     a:'and'},
+  {s:'I like reading ___ not writing.',                 a:'but'},
+  {s:'Do you like milk ___ juice?',                     a:'or'},
+  {s:'Which do you prefer, oranges ___ pears?',         a:'or'},
+  {s:'Jane ___ I are going for a show.',                a:'and'},
+  {s:'Ellie has long hair, ___ her sister has short hair.', a:'but'},
+  {s:'My brother can read ___ write.',                  a:'and'},
+  {s:'Do you prefer crayons ___ coloured pencils?',     a:'or'},
+  {s:'Walk carefully ___ you will fall.',               a:'or'},
+  {s:'She likes cycling ___ dancing.',                  a:'and'},
+  {s:'Clara likes jogging ___ not swimming.',           a:'but'},
+  {s:'I am short ___ my friends are tall.',             a:'but'},
+  {s:'You can have a cookie ___ a cupcake, not both.',  a:'or'},
+];
+const fillOrder = shuffle(FILL);
+function gFill(i){
+  const t = fillOrder[(i-1) % fillOrder.length];
+  const parts = t.s.split('___');
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + parts[0] + '<input class="ans gradable" data-answer="'+t.a+'" type="text" maxlength="3" autocomplete="off">' + parts[1]
+    + '</div>';
+}
+
+/* ---- Section 2: choose the conjunction (chip-select, one answer) ---- */
+const CHOOSE = [
+  {s:'You must return the books now ___ you will be fined.', a:'or'},
+  {s:'My father likes mangoes ___ grapes.',            a:'and'},
+  {s:'Mrs Rosie was sick ___ did not see the doctor.', a:'but'},
+  {s:'Does Nathan like the red ___ the blue car?',     a:'or'},
+  {s:'You can have noodles ___ rice, not both.',       a:'or'},
+  {s:'He is tired ___ hungry.',                        a:'and'},
+  {s:'My grandmother likes sewing ___ not cooking.',   a:'but'},
+  {s:'Li Ming got a book ___ a toy on his birthday.',  a:'and'},
+  {s:'The cake is sweet ___ tasty.',                   a:'and'},
+  {s:'Is it a cat ___ a dog?',                         a:'or'},
+  {s:'I wanted to play ___ it was raining.',           a:'but'},
+];
+const chooseOrder = shuffle(CHOOSE);
+function gChoose(i){
+  const t = chooseOrder[(i-1) % chooseOrder.length];
+  const chips = ['and','but','or'].map(o =>
+    '<button type="button" class="chip cchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Conjunctions: and, but, or',
+  'Conjunctions are joining words that connect words and ideas.<br>'
+  + 'Use <b>and</b> for things that go together: <i>bread and butter</i>.<br>'
+  + 'Use <b>but</b> to show a contrast: <i>small but strong</i>.<br>'
+  + 'Use <b>or</b> to show a choice: <i>tea or coffee?</i>');
+html += WS.section('Fill in: and, but or or', cfg.fill, gFill);
+html += WS.section('Choose the joining word', cfg.choose, gChoose);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • conjunctions';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['fill','choose'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

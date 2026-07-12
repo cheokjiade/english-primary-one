@@ -27,6 +27,10 @@ const TARGETS = [
     params: 'seed=verify&write=3&sort=3&find=3&blank=3&capital=3' },
   { name: 'articles', file: 'articles.html',
     params: 'seed=verify&aan=4&article=4' },
+  { name: 'subject-verb-agreement', file: 'subject-verb-agreement.html',
+    params: 'seed=verify&choose=4&fill=4' },
+  { name: 'conjunctions', file: 'conjunctions.html',
+    params: 'seed=verify&fill=4&choose=4' },
 ];
 
 // Higher per-section counts used ONLY for duplicate detection — each kept <= its content-pool size,
@@ -35,6 +39,8 @@ const DUP_PARAMS = {
   'beginning-sounds': 'first=6&name=8&same=5&write=8&sentence=6',
   'common-proper-nouns': 'write=8&sort=10&find=8&blank=8&capital=8',
   'articles': 'aan=10&article=8',
+  'subject-verb-agreement': 'choose=10&fill=8',
+  'conjunctions': 'fill=10&choose=8',
 };
 
 // Launch installed Chrome/Edge without downloading a browser.
