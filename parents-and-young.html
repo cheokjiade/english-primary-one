@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 21 — Parents and Their Young. Primary One English (VOCABULARY).
+     Template for the vocabulary units: MATCHING widget (see simple-past-tense.html
+     / AGENTS.md) + a chip-select "choose" section. Copy this for the other
+     vocab units (occupations, people, places, gender, homes) — swap PAIRS + CHOOSE.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parents and Their Young — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:60px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  /* matching widget */
+  .match { position:relative; display:flex; justify-content:space-between; gap:90px; max-width:560px; margin:6px 0 10px; }
+  .mcol { display:flex; flex-direction:column; gap:16px; z-index:2; }
+  .colhead { font-family:Verdana,sans-serif; font-size:10.5pt; font-weight:bold; color:#666; text-align:center; margin-bottom:4px; }
+  .mitem { font:inherit; font-size:15pt; padding:8px 14px; border:2.5px solid var(--ink); border-radius:12px; background:#fff; cursor:pointer; min-width:112px; text-align:center; }
+  .mitem.msel { background:#fde68a; }
+  .mitem.mk-correct { border-color:var(--right); background:#bbf7d0; }
+  .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
+  .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+  @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🐣 Parents and Their Young — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap a baby animal, then tap its grown-up to join them.">Match <input type="number" id="f-match" min="0" max="6"></label>
+      <label data-tip="Tap the correct name of the young animal.">Choose <input type="number" id="f-choose" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap a baby then its grown-up to join them; tap the correct young name. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Parents and Their Young</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🐣⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  match:  WS.clamp(WS.toInt(WS.Q.get('match'),  5), 0, 6),
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: matching widget (reusable — see AGENTS.md) ---- */
+/* PAIRS: {v: left prompt, p: right answer}. Left column = young, right = grown-up. */
+const PAIRS = [
+  {v:'piglet',p:'pig'},{v:'kid',p:'goat'},{v:'cub',p:'lion'},{v:'lamb',p:'sheep'},
+  {v:'kitten',p:'cat'},{v:'duckling',p:'duck'},{v:'calf',p:'cow'},{v:'foal',p:'horse'},
+  {v:'chick',p:'hen'},{v:'puppy',p:'dog'},{v:'joey',p:'kangaroo'},{v:'gosling',p:'goose'},
+];
+const MATCH_HEADS = ['Baby', 'Grown-up'];
+function buildMatch(count){
+  if (count <= 0) return '';
+  const chosen = shuffle(PAIRS).slice(0, count);
+  const rights = shuffle(chosen.map(c => c.p));
+  const leftHtml = chosen.map(c => '<button type="button" class="mitem mleft" data-answer="'+c.p+'">'+c.v+'</button>').join('');
+  const rightHtml = rights.map(p => '<button type="button" class="mitem mright" data-val="'+p+'">'+p+'</button>').join('');
+  return '<h2>Match each baby animal to its parent</h2>'
+    + '<div id="sec-match" class="match"><svg class="mlines"></svg>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[0]+'</div>'+leftHtml+'</div>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[1]+'</div>'+rightHtml+'</div></div>';
+}
+function lineColor(l){ return l.classList.contains('mk-correct') ? 'var(--right)' : l.classList.contains('mk-incorrect') ? 'var(--wrong)' : 'var(--accent)'; }
+function drawMatch(m){
+  const svg = m.querySelector('.mlines'); svg.innerHTML = '';
+  const box = m.getBoundingClientRect();
+  m.querySelectorAll('.mleft').forEach(l => {
+    if (!l.dataset.conn) return;
+    const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+    if (!r) return;
+    const lr = l.getBoundingClientRect(), rr = r.getBoundingClientRect();
+    const line = document.createElementNS(SVGNS, 'line');
+    line.setAttribute('x1', lr.right - box.left); line.setAttribute('y1', lr.top + lr.height/2 - box.top);
+    line.setAttribute('x2', rr.left - box.left);  line.setAttribute('y2', rr.top + rr.height/2 - box.top);
+    line.setAttribute('stroke', lineColor(l)); line.setAttribute('stroke-width', '4'); line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+  });
+}
+function wireMatch(){
+  document.querySelectorAll('.match').forEach(m => {
+    let sel = null;
+    m.querySelectorAll('.mleft').forEach(l => l.addEventListener('click', () => {
+      m.querySelectorAll('.mleft').forEach(x => x.classList.remove('msel')); sel = l; l.classList.add('msel');
+    }));
+    m.querySelectorAll('.mright').forEach(r => r.addEventListener('click', () => {
+      if (!sel) return;
+      sel.dataset.conn = r.dataset.val; sel.classList.remove('msel','mk-correct','mk-incorrect'); r.classList.remove('mk-correct','mk-incorrect');
+      sel = null; drawMatch(m);
+    }));
+  });
+  window.addEventListener('resize', () => document.querySelectorAll('.match').forEach(drawMatch));
+}
+function resetMatch(){
+  document.querySelectorAll('.match .mleft').forEach(l => { delete l.dataset.conn; l.classList.remove('msel','mk-correct','mk-incorrect'); });
+  document.querySelectorAll('.match .mright').forEach(r => r.classList.remove('mk-correct','mk-incorrect'));
+  document.querySelectorAll('.match .mlines').forEach(s => s.innerHTML = '');
+}
+function markMatch(){ let total = 0, right = 0;
+  document.querySelectorAll('#sec-match').forEach(m => {
+    m.querySelectorAll('.mleft').forEach(l => { total++;
+      const ok = l.dataset.conn === l.dataset.answer;
+      l.classList.remove('mk-correct','mk-incorrect'); l.classList.add(ok ? 'mk-correct' : 'mk-incorrect');
+      const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+      if (r) { r.classList.remove('mk-correct','mk-incorrect'); r.classList.add(ok ? 'mk-correct' : 'mk-incorrect'); }
+      if (ok) right++;
+    });
+    drawMatch(m);
+  });
+  return { total, right };
+}
+window.__wsAutoSolve = function(){
+  document.querySelectorAll('.match .mleft').forEach(l => { l.dataset.conn = l.dataset.answer; });
+  document.querySelectorAll('.match').forEach(drawMatch);
+};
+
+/* ---- Section 2: choose the correct word (chip-select, per-item options) ---- */
+const CHOOSE = [
+  {s:'The young of a cow is a ___.',       opts:['calf','foal','chick'],   a:'calf'},
+  {s:'The young of a horse is a ___.',     opts:['foal','calf','cub'],     a:'foal'},
+  {s:'The young of a hen is a ___.',       opts:['chick','kid','puppy'],   a:'chick'},
+  {s:'The young of a dog is a ___.',       opts:['puppy','kitten','cub'],  a:'puppy'},
+  {s:'The young of a frog is a ___.',      opts:['tadpole','joey','chick'],a:'tadpole'},
+  {s:'The young of a goose is a ___.',     opts:['gosling','duckling','calf'], a:'gosling'},
+  {s:'The young of a lion is a ___.',      opts:['cub','kid','foal'],      a:'cub'},
+  {s:'The young of a butterfly is a ___.', opts:['caterpillar','tadpole','joey'], a:'caterpillar'},
+  {s:'The young of a cat is a ___.',       opts:['kitten','puppy','lamb'], a:'kitten'},
+  {s:'The young of a sheep is a ___.',     opts:['lamb','kid','calf'],     a:'lamb'},
+];
+const chooseOrder = shuffle(CHOOSE);
+function gChoose(i){
+  const t = chooseOrder[(i-1) % chooseOrder.length];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Parents and their young',
+  'Animals and their <b>young</b> (babies) have special names.<br>'
+  + 'A baby dog is a <b>puppy</b>; a baby cow is a <b>calf</b>; a baby cat is a <b>kitten</b>.');
+html += buildMatch(cfg.match);
+html += WS.section('Choose the young animal', cfg.choose, gChoose);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • parents and their young';
+
+/* ---- wiring ---- */
+wireMatch();
+WS.wireChips();
+WS.wirePanel(cfg, ['match','choose'], {
+  mark:  () => WS.mark({ extras: [markMatch] }),
+  clear: () => WS.clearAll(resetMatch),
+});
+</script>
+</body>
+</html>

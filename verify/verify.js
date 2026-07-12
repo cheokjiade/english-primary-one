@@ -49,6 +49,18 @@ const TARGETS = [
     params: 'seed=verify&choose=4&pick=4' },
   { name: 'demonstratives', file: 'demonstratives.html',
     params: 'seed=verify&singular=4&plural=4' },
+  { name: 'parents-and-young', file: 'parents-and-young.html',
+    params: 'seed=verify&match=4&choose=4' },
+  { name: 'occupations', file: 'occupations.html',
+    params: 'seed=verify&match=4&choose=4' },
+  { name: 'people', file: 'people.html',
+    params: 'seed=verify&match=4&choose=4' },
+  { name: 'gender', file: 'gender.html',
+    params: 'seed=verify&match=4&choose=4' },
+  { name: 'homes', file: 'homes.html',
+    params: 'seed=verify&match=4&choose=4' },
+  { name: 'places', file: 'places.html',
+    params: 'seed=verify&match=4&choose=4' },
 ];
 
 // Higher per-section counts used ONLY for duplicate detection — each kept <= its content-pool size,
@@ -68,6 +80,12 @@ const DUP_PARAMS = {
   'simple-past-tense': 'match=6&past=8',
   'question-words': 'choose=10&pick=8',
   'demonstratives': 'singular=10&plural=8',
+  'parents-and-young': 'match=6&choose=8',
+  'occupations': 'match=6&choose=8',
+  'people': 'match=6&choose=8',
+  'gender': 'match=6&choose=8',
+  'homes': 'match=6&choose=8',
+  'places': 'match=6&choose=8',
 };
 
 // Launch installed Chrome/Edge without downloading a browser.
