@@ -1,0 +1,6 @@
+# workbook photos / source scans — reference only, not published
+input/
+
+# verifier artefacts + deps
+verify/out/
+node_modules/

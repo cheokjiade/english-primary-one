@@ -1,0 +1,12 @@
+{
+  "name": "english-primary-one-verify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser-driven verifier for the English worksheet generators",
+  "scripts": {
+    "verify": "node verify.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.61.0"
+  }
+}

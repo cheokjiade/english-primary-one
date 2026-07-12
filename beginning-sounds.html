@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     REFERENCE UNIT — copy this file to build a new unit from a workbook photo.
+     It is a complete, working Primary-One English worksheet that demonstrates
+     every building block the engine offers:
+        • WS.teach(...)   — a "Let's learn" teaching block before the exercises
+        • typed inputs    — gFirst (custom `letter` kind), gWrite (default `text` kind, |-alternatives)
+        • chip-select one — gName  (tap the one correct answer)
+        • chip-select many— gSame  (tap the two correct answers)
+        • drag-to-order   — gSentence (arrange word tiles into a sentence)
+     Read AGENTS.md for the full workflow. Read specs/conventions.md for the contract.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beginning Sounds — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<style>
+  /* beginning-sounds-specific components (topic style stays in the page; shared style is in worksheet.css) */
+  .qrow { display:flex; align-items:center; justify-content:flex-start; gap:18px; flex-wrap:wrap; }
+  img.pic { width:64px; height:64px; }
+  img.obj { width:38px; height:38px; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:60px; }
+  input.ans.word { width:150px; }
+  .chip.wordchip { font-size:16pt; }
+  .chip.imgchip { border-radius:12px; padding:6px; }
+  .fullstop { font-size:24pt; font-weight:bold; margin-left:2px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔤 Beginning Sounds — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Look at the picture and write the first letter of its name.">First letter <input type="number" id="f-first" min="0" max="12"></label>
+      <label data-tip="Look at the picture and tap the word that names it.">Name it <input type="number" id="f-name" min="0" max="20"></label>
+      <label data-tip="Tap the two pictures whose names begin with the same sound.">Same sound <input type="number" id="f-same" min="0" max="5"></label>
+      <label data-tip="Look at the picture and write the whole word.">Write it <input type="number" id="f-write" min="0" max="12"></label>
+      <label data-tip="Drag the word tiles into the right order to make a sentence.">Sentence <input type="number" id="f-sentence" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Type letters/words (not case-sensitive); tap pictures/words to select; drag tiles to order. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Beginning Sounds</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔤⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  first:    WS.clamp(WS.toInt(WS.Q.get('first'),    3), 0, 12),
+  name:     WS.clamp(WS.toInt(WS.Q.get('name'),     3), 0, 20),
+  same:     WS.clamp(WS.toInt(WS.Q.get('same'),     3), 0, 5),
+  write:    WS.clamp(WS.toInt(WS.Q.get('write'),    2), 0, 12),
+  sentence: WS.clamp(WS.toInt(WS.Q.get('sentence'), 2), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { randInt, pick, shuffle, distinct, balanced } = WS.helpers(rng);
+
+/* ---- picture vocabulary (Twemoji, bundled offline under assets/twemoji/) ---- */
+const TW  = cp => 'assets/twemoji/' + cp + '.svg';
+const img = cp => '<img class="obj" src="' + TW(cp) + '" alt="">';
+const pic = cp => '<img class="pic" src="' + TW(cp) + '" alt="">';
+
+const WORDS = [
+  {cp:'1f34e', word:'apple',      l:'a'},
+  {cp:'1f426', word:'bird',       l:'b'}, {cp:'1f4d5', word:'book',    l:'b'},
+  {cp:'1f388', word:'balloon',    l:'b'}, {cp:'26f5',  word:'boat',    l:'b'}, {cp:'1f98b', word:'butterfly', l:'b'},
+  {cp:'1f431', word:'cat',        l:'c'}, {cp:'1f697', word:'car',     l:'c'}, {cp:'2601',  word:'cloud',     l:'c'}, {cp:'1f36a', word:'cookie', l:'c'},
+  {cp:'1f986', word:'duck',       l:'d'},
+  {cp:'1f95a', word:'egg',        l:'e'},
+  {cp:'1f41f', word:'fish',       l:'f'}, {cp:'1f438', word:'frog',    l:'f'}, {cp:'1f6a9', word:'flag',      l:'f'},
+  {cp:'1f3e0', word:'house',      l:'h'},
+  {cp:'1f343', word:'leaf',       l:'l'},
+  {cp:'270f',  word:'pencil',     l:'p'},
+  {cp:'1f430', word:'rabbit',     l:'r'},
+  {cp:'2b50',  word:'star',       l:'s'}, {cp:'1f41a', word:'shell',   l:'s'}, {cp:'1f353', word:'strawberry', l:'s'},
+  {cp:'1f69a', word:'truck',      l:'t'}, {cp:'1f337', word:'tulip',   l:'t'},
+];
+const BY_LETTER = {}; WORDS.forEach(w => { (BY_LETTER[w.l] = BY_LETTER[w.l] || []).push(w); });
+const LETTERS      = Object.keys(BY_LETTER).sort();                  // every first letter present
+const PAIR_LETTERS = LETTERS.filter(l => BY_LETTER[l].length >= 2);  // letters with >=2 words (for "same sound")
+
+/* ---- Section 1: write the first letter (typed input, custom `letter` kind) ---- */
+/* Distinct FIRST LETTER per question guarantees no two questions in the section are identical. */
+const firstLetters = shuffle(LETTERS);
+const firstUsed = new Set();
+function drawWord(letter){
+  const opts  = BY_LETTER[letter];
+  const fresh = opts.filter(w => !firstUsed.has(w.word));
+  const w = pick(fresh.length ? fresh : opts);
+  firstUsed.add(w.word); return w;
+}
+function gFirst(i){
+  const w = drawWord(firstLetters[(i-1) % firstLetters.length]);
+  return '<div class="item"><span class="label">'+i+'.</span> Write the first letter of the picture.'
+    + '<div class="qrow">' + pic(w.cp)
+    + '<span class="field"><input class="ans gradable" data-kind="letter" data-answer="'+w.l+'" type="text" maxlength="1" autocomplete="off"></span>'
+    + '</div></div>';
+}
+
+/* ---- Section 2: name the picture (chip-select, one answer) ---- */
+const nameTargets = shuffle(WORDS);
+function gName(i){
+  const t = nameTargets[(i-1) % nameTargets.length];
+  const distractors = shuffle(WORDS.filter(w => w.word !== t.word)).slice(0, 2);
+  const opts = shuffle([{w:t, ok:true}, ...distractors.map(d => ({w:d, ok:false}))]);
+  const chips = opts.map(o => '<button type="button" class="chip wordchip" data-ok="'+(o.ok?1:0)+'">'+o.w.word+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> Which word names the picture? (tap it)'
+    + '<div class="qrow">' + pic(t.cp)
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div>'
+    + '</div></div>';
+}
+
+/* ---- Section 3: same first sound (chip-select, two answers) ---- */
+/* Distinct TARGET LETTER per question; the two distractors come from two different other letters,
+   so exactly one pair shares a beginning sound. */
+const sameLetters = shuffle(PAIR_LETTERS);
+function gSame(i){
+  const L = sameLetters[(i-1) % sameLetters.length];
+  const correct = shuffle(BY_LETTER[L]).slice(0, 2);
+  const otherLetters = shuffle(LETTERS.filter(x => x !== L)).slice(0, 2);
+  const distractors = otherLetters.map(x => pick(BY_LETTER[x]));
+  const opts = shuffle([...correct.map(w => ({w, ok:true})), ...distractors.map(w => ({w, ok:false}))]);
+  const chips = opts.map(o => '<button type="button" class="chip imgchip" data-ok="'+(o.ok?1:0)+'">'+img(o.w.cp)+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> Tap the <b>two</b> pictures that begin with the same sound.'
+    + '<div class="sel-block" data-mode="many"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 4: write the whole word (typed input, default `text` kind with |-alternatives) ---- */
+const WRITE = [
+  {cp:'1f431',word:'cat'},   {cp:'1f986',word:'duck'}, {cp:'1f41f',word:'fish'}, {cp:'1f95a',word:'egg'},
+  {cp:'2b50', word:'star'},  {cp:'1f438',word:'frog'}, {cp:'26f5', word:'boat'}, {cp:'1f343',word:'leaf'},
+  {cp:'1f6a9',word:'flag'},  {cp:'1f4d5',word:'book'}, {cp:'1f426',word:'bird'}, {cp:'1f430',word:'rabbit', alt:'bunny'},
+];
+const writeTargets = shuffle(WRITE);
+function gWrite(i){
+  const t = writeTargets[(i-1) % writeTargets.length];
+  const ans = t.alt ? t.word + '|' + t.alt : t.word;   // data-answer="rabbit|bunny" accepts either
+  return '<div class="item"><span class="label">'+i+'.</span> Write the naming word for the picture.'
+    + '<div class="qrow">' + pic(t.cp)
+    + '<span class="field"><input class="ans word gradable" data-answer="'+ans+'" type="text" autocomplete="off"></span>'
+    + '</div></div>';
+}
+
+/* ---- Section 5: build a sentence (drag / tap-to-order) ---- */
+/* Tile values are POSITIONS (1..n), so repeated words are fine; slot k wants the tile whose value is k. */
+const SENTENCES = [
+  ['I','see','a','cat'],   ['The','dog','can','run'], ['I','like','my','book'],
+  ['We','go','to','school'], ['The','sun','is','hot'], ['I','have','a','ball'],
+  ['She','has','a','pen'], ['He','can','hop'],
+];
+const sentTargets = shuffle(SENTENCES);
+let sid = 0;
+function gSentence(i){
+  const s = sentTargets[(i-1) % sentTargets.length];
+  const id = 'o' + (sid++);
+  const tiles = shuffle(s.map((w, k) => ({ w, v: String(k+1) })));
+  const src   = tiles.map(t => '<div class="dtile" data-val="'+t.v+'">'+t.w+'</div>').join('');
+  const slots = s.map((w, k) => '<div class="dslot" data-answer="'+(k+1)+'"></div>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> Put the words in order to make a sentence.'
+    + '<div class="dorder" id="'+id+'">'
+    + '<div class="dsource">'+src+'</div>'
+    + '<div class="dslots">'+slots+'<span class="fullstop">.</span></div>'
+    + '</div></div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Beginning sounds',
+  'Every word starts with a <span class="sound">sound</span>. Say the word slowly and listen to the first sound.<br>'
+  + '<span class="ex">'+img('1f41d')+' <b>bee</b> → <span class="sound">b</span></span>'
+  + '<span class="ex">'+img('1f431')+' <b>cat</b> → <span class="sound">c</span></span>'
+  + '<span class="ex">'+img('1f986')+' <b>duck</b> → <span class="sound">d</span></span>');
+html += WS.section('Write the first letter', cfg.first, gFirst);
+
+html += WS.teach('Naming words',
+  'A <b>naming word</b> tells us the name of a person, animal or thing. Look at the picture and choose its name.');
+html += WS.section('Name the picture', cfg.name, gName);
+
+html += WS.section('Same first sound', cfg.same, gSame);
+
+html += WS.teach('Spelling',
+  'Say the word, listen for each sound, then write it. Some pictures have more than one right name — '
+  + 'e.g. '+img('1f430')+' can be <b>rabbit</b> or <b>bunny</b>.');
+html += WS.section('Write the word', cfg.write, gWrite);
+
+html += WS.teach('Making sentences',
+  'A sentence begins with a <b>capital letter</b> and ends with a <b>full stop</b> (.). '
+  + 'The words must be in the right order.<br><span class="ex"><b>I see a cat.</b></span>');
+html += WS.section('Build a sentence', cfg.sentence, gSentence);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • beginning sounds';
+
+/* ---- wiring (shared engine) ---- */
+WS.addKind('letter', (v, a) => (v||'').trim().toLowerCase() === (a||'').trim().toLowerCase()); // single-letter, case-insensitive
+WS.wireChips();          // tappable chips (radio for data-mode="one", checkbox for "many")
+WS.enableDragOrder();    // drag / tap-to-place tiles
+WS.wirePanel(cfg, ['first','name','same','write','sentence'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>
