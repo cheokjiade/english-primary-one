@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 4 — Articles (a, an, the). Primary One English.
+     Built from beginning-sounds.html; see specs/articles.md.
+     Two sections: fill 'a'/'an' (typed) · choose a/an/the (chip-select one).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Articles (a, an, the) — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<style>
+  .qrow { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); }
+  input.ans.aan { width:52px; }
+  .aanword { font-size:17pt; }
+  .chip.artchip { font-size:16pt; min-width:52px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🅰️ Articles (a, an, the) — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Write 'a' or 'an' before each word, using its beginning sound.">a or an <input type="number" id="f-aan" min="0" max="12"></label>
+      <label data-tip="Tap the correct article — a, an or the — for each sentence.">Choose article <input type="number" id="f-article" min="0" max="10"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Type 'a' or 'an' (not case-sensitive); tap the correct article. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Articles: a, an, the</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🅰️⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  aan:     WS.clamp(WS.toInt(WS.Q.get('aan'),     6), 0, 12),
+  article: WS.clamp(WS.toInt(WS.Q.get('article'), 5), 0, 10) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: a or an? (typed input, default `text` kind) ---- */
+/* Article decided by the beginning SOUND: 'an' before a vowel sound, 'a' before a consonant sound.
+   Note the 'u'-as-"you" exception (a uniform, a unicorn, a ukelele) and vowel-sound u (an uncle). */
+const AAN = [
+  {w:'boat',a:'a'},{w:'ruler',a:'a'},{w:'girl',a:'a'},{w:'lion',a:'a'},{w:'pail',a:'a'},
+  {w:'table',a:'a'},{w:'balloon',a:'a'},{w:'panda',a:'a'},{w:'cow',a:'a'},{w:'mouse',a:'a'},
+  {w:'book',a:'a'},{w:'kite',a:'a'},{w:'fish',a:'a'},{w:'key',a:'a'},{w:'tiger',a:'a'},
+  {w:'dog',a:'a'},{w:'cat',a:'a'},{w:'ball',a:'a'},{w:'house',a:'a'},{w:'car',a:'a'},
+  {w:'uniform',a:'a'},{w:'unicorn',a:'a'},{w:'ukelele',a:'a'},
+  {w:'ant',a:'an'},{w:'eraser',a:'an'},{w:'island',a:'an'},{w:'ostrich',a:'an'},{w:'uncle',a:'an'},
+  {w:'apron',a:'an'},{w:'igloo',a:'an'},{w:'eagle',a:'an'},{w:'alligator',a:'an'},{w:'owl',a:'an'},
+  {w:'axe',a:'an'},{w:'egg',a:'an'},{w:'iron',a:'an'},{w:'orange',a:'an'},{w:'umbrella',a:'an'},
+  {w:'apple',a:'an'},{w:'elephant',a:'an'},{w:'insect',a:'an'},{w:'ambulance',a:'an'},
+];
+const aanOrder = shuffle(AAN);
+function gAan(i){
+  const t = aanOrder[(i-1) % aanOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> Write <b>a</b> or <b>an</b> before the word.'
+    + '<div class="qrow"><span class="field"><input class="ans aan gradable" data-answer="'+t.a+'" type="text" maxlength="2" autocomplete="off"></span>'
+    + '<span class="aanword">'+t.w+'</span></div></div>';
+}
+
+/* ---- Section 2: choose the article (chip-select, one answer: a / an / the) ---- */
+const ART = [
+  {s:'Look! ___ moon looks beautiful.', a:'the'},
+  {s:'That is ___ rooster!',            a:'a'},
+  {s:'Farul saw ___ aeroplane.',        a:'an'},
+  {s:'I have ___ apple.',               a:'an'},
+  {s:'She rides ___ horse.',            a:'a'},
+  {s:'He saw ___ elephant at the zoo.', a:'an'},
+  {s:'___ sun is very hot.',            a:'the'},
+  {s:'Tim has ___ cap.',                a:'a'},
+  {s:'I want ___ orange.',              a:'an'},
+  {s:'We visited ___ museum.',          a:'a'},
+  {s:'Please pass me ___ umbrella.',    a:'an'},
+  {s:'The boy kicked ___ ball.',        a:'a'},
+  {s:'___ Earth is round.',             a:'the'},
+  {s:'I ate ___ egg for breakfast.',    a:'an'},
+];
+const artOrder = shuffle(ART);
+function gArticle(i){
+  const t = artOrder[(i-1) % artOrder.length];
+  const correct = t.a.toLowerCase();
+  const chips = ['a','an','the'].map(o =>
+    '<button type="button" class="chip artchip" data-ok="'+(o===correct?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Articles: a, an, the',
+  'The articles <b>a</b>, <b>an</b> and <b>the</b> come before nouns.<br>'
+  + 'Use <b>a</b> before a <b>consonant</b> sound: <i>a book, a car</i>.<br>'
+  + 'Use <b>an</b> before a <b>vowel</b> sound (a, e, i, o, u): <i>an apple, an egg</i>.<br>'
+  + 'Use <b>the</b> for a special or already-known noun: <i>the sun</i>.<br>'
+  + '<span class="ex">Tip: when <b>u</b> sounds like <b>"you"</b>, use <b>a</b> — <i>a uniform, a unicorn</i>.</span>');
+html += WS.section('a or an?', cfg.aan, gAan);
+html += WS.section('Choose the correct article', cfg.article, gArticle);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • articles';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['aan','article'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

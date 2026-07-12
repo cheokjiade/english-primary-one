@@ -25,6 +25,8 @@ const TARGETS = [
     params: 'seed=verify&first=3&name=3&same=3&write=2&sentence=2' },
   { name: 'common-proper-nouns', file: 'common-proper-nouns.html',
     params: 'seed=verify&write=3&sort=3&find=3&blank=3&capital=3' },
+  { name: 'articles', file: 'articles.html',
+    params: 'seed=verify&aan=4&article=4' },
 ];
 
 // Higher per-section counts used ONLY for duplicate detection — each kept <= its content-pool size,
@@ -32,6 +34,7 @@ const TARGETS = [
 const DUP_PARAMS = {
   'beginning-sounds': 'first=6&name=8&same=5&write=8&sentence=6',
   'common-proper-nouns': 'write=8&sort=10&find=8&blank=8&capital=8',
+  'articles': 'aan=10&article=8',
 };
 
 // Launch installed Chrome/Edge without downloading a browser.
