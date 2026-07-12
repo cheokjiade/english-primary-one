@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Countable and Uncountable Nouns. Primary One English.
+     Built from subject-verb-agreement.html; see specs/countable-uncountable-nouns.md.
+     Two sections: many or much? (chip-select one) · a few or a little? (chip-select one).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Countable and Uncountable Nouns — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:56px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🍚 Countable &amp; Uncountable Nouns — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap 'many' (countable) or 'much' (uncountable) for each sentence.">many or much? <input type="number" id="f-much" min="0" max="10"></label>
+      <label data-tip="Tap 'a few' (countable) or 'a little' (uncountable) for each sentence.">a few or a little? <input type="number" id="f-few" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap <b>many</b> / <b>much</b> or <b>a few</b> / <b>a little</b> for each sentence. Countable nouns use <b>many</b> and <b>a few</b>; uncountable nouns use <b>much</b> and <b>a little</b>. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Countable and Uncountable Nouns</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🍚⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  much: WS.clamp(WS.toInt(WS.Q.get('much'), 4), 0, 10),
+  few:  WS.clamp(WS.toInt(WS.Q.get('few'),  4), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: many or much? (chip-select, one answer) ---- */
+/* Countable noun (can be counted) -> many ; uncountable noun -> much. */
+const MUCH = [
+  {s:'I have ___ storybooks.',                a:'many'},
+  {s:'There is not ___ tea in the pot.',      a:'much'},
+  {s:'My father has ___ old stamps.',         a:'many'},
+  {s:'The baby has not ___ hair.',            a:'much'},
+  {s:'I keep ___ fish in the tank.',          a:'many'},
+  {s:'There is too ___ butter on the bread.', a:'much'},
+  {s:'Lucas has ___ toy cars.',               a:'many'},
+  {s:'How ___ water do you drink?',           a:'much'},
+  {s:'There are ___ apples.',                 a:'many'},
+  {s:'She does not eat ___ rice.',            a:'much'},
+  {s:'We saw ___ birds.',                     a:'many'},
+  {s:'There is ___ sugar in the jar.',        a:'much'},
+];
+const muchOrder = shuffle(MUCH);
+function gMuch(i){
+  const t = muchOrder[(i-1) % muchOrder.length];
+  const chips = ['many','much'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: a few or a little? (chip-select, one answer) ---- */
+/* Countable noun (can be counted) -> a few ; uncountable noun -> a little. */
+const FEW = [
+  {s:'Jenny puts ___ strawberries on the cake.', a:'a few'},
+  {s:'I always add ___ pepper to my food.',       a:'a little'},
+  {s:'Please add ___ salt to the soup.',          a:'a little'},
+  {s:'There are ___ apples in the basket.',       a:'a few'},
+  {s:'Grandma uses ___ oil to cook.',             a:'a little'},
+  {s:'I have ___ coins.',                         a:'a few'},
+  {s:'Add ___ milk to the tea.',                  a:'a little'},
+  {s:'There are ___ children in the room.',       a:'a few'},
+  {s:'He has ___ money.',                         a:'a little'},
+  {s:'She bought ___ oranges.',                   a:'a few'},
+];
+const fewOrder = shuffle(FEW);
+function gFew(i){
+  const t = fewOrder[(i-1) % fewOrder.length];
+  const chips = ['a few','a little'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Countable and uncountable nouns',
+  'Countable nouns can be counted (books, apples) — use <b>many</b> and <b>a few</b>.<br>'
+  + 'Uncountable nouns cannot be counted (water, sugar) — use <b>much</b> and <b>a little</b>.');
+html += WS.section('many or much?', cfg.much, gMuch);
+html += WS.section('a few or a little?', cfg.few, gFew);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • countable and uncountable nouns';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['much','few'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

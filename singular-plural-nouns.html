@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Singular and Plural Nouns. Primary One English.
+     Built from subject-verb-agreement.html; see specs/singular-plural-nouns.md.
+     Two sections: write the plural (typed) · choose the correct plural (chip-select one).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Singular and Plural Nouns — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:130px; }
+  .chip.vchip { font-size:16pt; min-width:56px; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔢 Singular &amp; Plural Nouns — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Write the plural of each noun (add -s, -es, or change y to -ies).">Write the plural <input type="number" id="f-write" min="0" max="12"></label>
+      <label data-tip="Tap the correct plural for each special noun.">Choose the plural <input type="number" id="f-choose" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Type the plural noun (not case-sensitive), then tap the correct plural for the special nouns. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Singular and Plural Nouns</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔢⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  write:  WS.clamp(WS.toInt(WS.Q.get('write'),  4), 0, 12),
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: write the plural (typed input, default `text` kind) ---- */
+/* Add -s (cat->cats); add -es after s/x/ch/sh (box->boxes); y -> -ies (baby->babies); f -> -ves (leaf->leaves). */
+const WRITE = [
+  {one:'cat',    many:'cats'},
+  {one:'dog',    many:'dogs'},
+  {one:'book',   many:'books'},
+  {one:'star',   many:'stars'},
+  {one:'bird',   many:'birds'},
+  {one:'flower', many:'flowers'},
+  {one:'box',    many:'boxes'},
+  {one:'bus',    many:'buses'},
+  {one:'dish',   many:'dishes'},
+  {one:'brush',  many:'brushes'},
+  {one:'watch',  many:'watches'},
+  {one:'fox',    many:'foxes'},
+  {one:'baby',   many:'babies'},
+  {one:'cherry', many:'cherries'},
+  {one:'puppy',  many:'puppies'},
+  {one:'lady',   many:'ladies'},
+  {one:'leaf',   many:'leaves'},
+  {one:'wolf',   many:'wolves'},
+];
+const writeOrder = shuffle(WRITE);
+function gWrite(i){
+  const t = writeOrder[(i-1) % writeOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> one <b>'+t.one+'</b>  &rarr;  many <input class="ans gradable" data-answer="'+t.many+'" type="text" autocomplete="off"></div>';
+}
+
+/* ---- Section 2: choose the correct plural (chip-select, one answer) ---- */
+/* Special (irregular) plurals: man->men, tooth->teeth, mouse->mice, etc. The two chips are shuffled
+   per item (seeded rng) so the correct plural is not always first; exactly one chip is data-ok="1". */
+const CHOOSE = [
+  {one:'man',   right:'men',      wrong:'mans'},
+  {one:'woman', right:'women',    wrong:'womans'},
+  {one:'tooth', right:'teeth',    wrong:'tooths'},
+  {one:'child', right:'children', wrong:'childs'},
+  {one:'mouse', right:'mice',     wrong:'mouses'},
+  {one:'foot',  right:'feet',     wrong:'foots'},
+  {one:'goose', right:'geese',    wrong:'gooses'},
+  {one:'ox',    right:'oxen',     wrong:'oxes'},
+];
+const chooseOrder = shuffle(CHOOSE);
+function gChoose(i){
+  const t = chooseOrder[(i-1) % chooseOrder.length];
+  const opts = shuffle([t.right, t.wrong]);
+  const chips = opts.map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.right?1:0)+'">'+o+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> one <b>'+t.one+'</b>  &rarr;  many'
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Singular and plural nouns',
+  'A <b>singular</b> noun means one; a <b>plural</b> noun means more than one.<br>'
+  + 'Add <b>-s</b>: cat → cats. Add <b>-es</b> after s, x, ch, sh: box → boxes. Change <b>y</b> to <b>-ies</b>: baby → babies.<br>'
+  + 'Some are special: man → men.');
+html += WS.section('Write the plural', cfg.write, gWrite);
+html += WS.section('Choose the correct plural', cfg.choose, gChoose);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • singular & plural nouns';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['write','choose'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

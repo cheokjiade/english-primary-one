@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Personal Pronouns. Primary One English.
+     Built from subject-verb-agreement.html; see specs/personal-pronouns.md.
+     Two sections: choose the subject pronoun · choose the object pronoun
+     (BOTH chip-select one, mirroring gChoose).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal Pronouns — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:56px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🧑 Personal Pronouns — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap the subject pronoun — He, She, It, We or They — for each sentence.">Subject pronoun <input type="number" id="f-subject" min="0" max="12"></label>
+      <label data-tip="Tap the object pronoun — him, her, it, us or them — for each sentence.">Object pronoun <input type="number" id="f-object" min="0" max="9"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap the pronoun that takes the place of the naming word. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Personal Pronouns</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🧑⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  subject: WS.clamp(WS.toInt(WS.Q.get('subject'), 4), 0, 12),
+  object:  WS.clamp(WS.toInt(WS.Q.get('object'),  4), 0, 9) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: choose the subject pronoun (chip-select, one answer) ---- */
+/* Subject pronouns do the action: He, She, It, We, They. */
+const SUBJECT = [
+  {s:'Kathy is a dancer. ___ is a dancer.',          a:'She'},
+  {s:'My brother is a pupil. ___ is a pupil.',        a:'He'},
+  {s:'Peter and Bob like to read. ___ like to read.', a:'They'},
+  {s:'Suzy and I are classmates. ___ are classmates.', a:'We'},
+  {s:'The cat is hungry. ___ is mewing.',             a:'It'},
+  {s:'Mr Lee is a fireman. ___ is a fireman.',        a:'He'},
+  {s:'My sister likes to cook. ___ likes to cook.',   a:'She'},
+  {s:'The books are new. ___ are new.',               a:'They'},
+  {s:'Sara and I swim every day. ___ swim every day.', a:'We'},
+  {s:'The dog is barking. ___ is barking.',           a:'It'},
+  {s:'Mrs Tan is a teacher. ___ is a teacher.',       a:'She'},
+  {s:'Tom is my friend. ___ is my friend.',           a:'He'},
+];
+const subjectOrder = shuffle(SUBJECT);
+function gSubject(i){
+  const t = subjectOrder[(i-1) % subjectOrder.length];
+  const chips = ['He','She','It','We','They'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: choose the object pronoun (chip-select, one answer) ---- */
+/* Object pronouns receive the action: him, her, it, us, them. */
+const OBJECT = [
+  {s:'Michael gave ___ a book. (Joanne)',              a:'her'},
+  {s:'Tom gave ___ some seeds. (the bird)',            a:'it'},
+  {s:'She baked a cake for ___. (Claire and Ellie)',   a:'them'},
+  {s:'The clown gave ___ balloons. (my brother and me)', a:'us'},
+  {s:'Grandpa bought a tricycle for ___. (David)',     a:'him'},
+  {s:'The nurse gave ___ an injection. (Samantha)',    a:'her'},
+  {s:'I saw ___ at the park. (the boys)',              a:'them'},
+  {s:'Please help ___. (my mother and me)',            a:'us'},
+  {s:'Give the pencil to ___. (Tom)',                  a:'him'},
+];
+const objectOrder = shuffle(OBJECT);
+function gObject(i){
+  const t = objectOrder[(i-1) % objectOrder.length];
+  const chips = ['him','her','it','us','them'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Personal pronouns',
+  'A <b>pronoun</b> takes the place of a noun.<br>'
+  + '<b>Subject pronouns</b> do the action: I, you, he, she, it, we, they.<br>'
+  + '<b>Object pronouns</b> receive the action: me, you, him, her, it, us, them.');
+html += WS.section('Choose the subject pronoun', cfg.subject, gSubject);
+html += WS.section('Choose the object pronoun', cfg.object, gObject);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • personal pronouns';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['subject','object'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

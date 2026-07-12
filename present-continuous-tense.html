@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Present Continuous Tense (is/are + verb + -ing). Primary One English.
+     Built from subject-verb-agreement.html; see specs/present-continuous-tense.md.
+     Two sections: add -ing (typed) · is or are? (chip-select one).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Present Continuous Tense — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:130px; }
+  .chip.vchip { font-size:16pt; min-width:56px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .sel-block { margin-top:4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🎬 Present Continuous Tense — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Write the -ing form of the verb (run &rarr; running).">Add -ing <input type="number" id="f-ing" min="0" max="10"></label>
+      <label data-tip="Tap 'is' (one) or 'are' (more than one) for each sentence.">is or are? <input type="number" id="f-isare" min="0" max="10"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Add <b>-ing</b> to each verb, and tap or type <b>is</b> / <b>are</b> (not case-sensitive). A singular subject uses <b>is</b>; a plural subject uses <b>are</b>. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Present Continuous Tense</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🎬⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  ing:   WS.clamp(WS.toInt(WS.Q.get('ing'),   4), 0, 10),
+  isare: WS.clamp(WS.toInt(WS.Q.get('isare'), 4), 0, 10) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: add -ing to the verb (typed input, default `text` kind) ---- */
+const ING = [
+  {base:'run',   ing:'running'},
+  {base:'sit',   ing:'sitting'},
+  {base:'swim',  ing:'swimming'},
+  {base:'hop',   ing:'hopping'},
+  {base:'clap',  ing:'clapping'},
+  {base:'write', ing:'writing'},
+  {base:'make',  ing:'making'},
+  {base:'ride',  ing:'riding'},
+  {base:'bake',  ing:'baking'},
+  {base:'smile', ing:'smiling'},
+  {base:'play',  ing:'playing'},
+  {base:'read',  ing:'reading'},
+  {base:'eat',   ing:'eating'},
+  {base:'sing',  ing:'singing'},
+  {base:'jump',  ing:'jumping'},
+  {base:'walk',  ing:'walking'},
+  {base:'draw',  ing:'drawing'},
+];
+const ingOrder = shuffle(ING);
+function gIng(i){
+  const t = ingOrder[(i-1) % ingOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> Add <b>-ing</b>:  <b>'+t.base+'</b>  &rarr;  <input class="ans gradable" data-answer="'+t.ing+'" type="text" autocomplete="off"></div>';
+}
+
+/* ---- Section 2: is or are? (chip-select, one answer) ---- */
+/* Singular subject (one) -> is ; plural subject (more than one) -> are. */
+const ISARE = [
+  {s:'The baby ___ crying.',        a:'is'},
+  {s:'The birds ___ singing.',      a:'are'},
+  {s:'Tom ___ swimming.',           a:'is'},
+  {s:'The girls ___ dancing.',      a:'are'},
+  {s:'My father ___ working.',      a:'is'},
+  {s:'They ___ playing.',           a:'are'},
+  {s:'The cat ___ sleeping.',       a:'is'},
+  {s:'We ___ reading.',             a:'are'},
+  {s:'She ___ cooking.',            a:'is'},
+  {s:'The children ___ jumping.',   a:'are'},
+  {s:'He ___ running.',             a:'is'},
+  {s:'The students ___ writing.',   a:'are'},
+  {s:'The dog ___ barking.',        a:'is'},
+  {s:'The boys ___ shouting.',      a:'are'},
+];
+const isareOrder = shuffle(ISARE);
+function gIsare(i){
+  const t = isareOrder[(i-1) % isareOrder.length];
+  const chips = ['is','are'].map(o =>
+    '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Present continuous tense',
+  'The present continuous tense shows an action happening <b>now</b>. Use <b>is</b> or <b>are</b> + the verb + <b>-ing</b>.<br><i>He is running. They are playing.</i>');
+html += WS.section('Add -ing to the verb', cfg.ing, gIng);
+html += WS.section('is or are?', cfg.isare, gIsare);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • present continuous tense';
+
+/* ---- wiring ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['ing','isare'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

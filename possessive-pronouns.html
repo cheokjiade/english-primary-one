@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Possessive Adjectives and Pronouns. Primary One English.
+     Built from subject-verb-agreement.html; see specs/possessive-pronouns.md.
+     Two sections: write the possessive adjective (typed) · write the possessive pronoun (typed).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Possessive Adjectives and Pronouns — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:90px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔑 Possessive Words — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Write the possessive adjective (my, your, his, her, our, their, its) — it comes before a noun.">Possessive adjective <input type="number" id="f-adjective" min="0" max="10"></label>
+      <label data-tip="Write the possessive pronoun (mine, yours, his, hers, ours, theirs) — it stands alone.">Possessive pronoun <input type="number" id="f-pronoun" min="0" max="10"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Type the possessive word (not case-sensitive). A <b>possessive adjective</b> (my, your, his…) comes before a noun; a <b>possessive pronoun</b> (mine, yours, hers…) stands alone. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Possessive Adjectives and Pronouns</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔑⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  adjective: WS.clamp(WS.toInt(WS.Q.get('adjective'), 4), 0, 10),
+  pronoun:   WS.clamp(WS.toInt(WS.Q.get('pronoun'),   4), 0, 10) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: write the possessive adjective (typed input, default `text` kind) ---- */
+/* A possessive adjective comes before a noun: my, your, his, her, our, their, its. */
+const ADJECTIVE = [
+  {s:'I am Mary. This is ___ doll.',              a:'my'},
+  {s:'You are John. That is ___ bicycle.',        a:'your'},
+  {s:'She has a new dress. That is ___ dress.',    a:'her'},
+  {s:'He has a cap. This is ___ cap.',            a:'his'},
+  {s:'We have a car. That is ___ car.',           a:'our'},
+  {s:'They have toys. Those are ___ toys.',        a:'their'},
+  {s:'The dog wags ___ tail.',                    a:'its'},
+  {s:'I lost ___ pencil.',                        a:'my'},
+  {s:'You forgot ___ bag.',                       a:'your'},
+  {s:'The girls raised ___ hands.',               a:'their'},
+];
+const adjectiveOrder = shuffle(ADJECTIVE);
+function gAdjective(i){
+  const t = adjectiveOrder[(i-1) % adjectiveOrder.length];
+  const parts = t.s.split('___');
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + parts[0] + '<input class="ans gradable" data-answer="'+t.a+'" type="text" autocomplete="off">' + parts[1]
+    + '</div>';
+}
+
+/* ---- Section 2: write the possessive pronoun (typed input, default `text` kind) ---- */
+/* A possessive pronoun stands alone: mine, yours, his, hers, ours, theirs. */
+const PRONOUN = [
+  {s:'She is Olivia. This doll is ___.',              a:'hers'},
+  {s:'They are Tom and Sally. This kitten is ___.',    a:'theirs'},
+  {s:'You are Li Ming. The toy car is ___.',          a:'yours'},
+  {s:'I am Jessica. These shoes are ___.',            a:'mine'},
+  {s:'He is Naveen. The football is ___.',            a:'his'},
+  {s:'We share these books. They are ___.',           a:'ours'},
+  {s:'This pencil belongs to me. It is ___.',         a:'mine'},
+  {s:'That bag belongs to her. It is ___.',           a:'hers'},
+  {s:'The markers belong to you. They are ___.',       a:'yours'},
+  {s:'The house belongs to them. It is ___.',         a:'theirs'},
+];
+const pronounOrder = shuffle(PRONOUN);
+function gPronoun(i){
+  const t = pronounOrder[(i-1) % pronounOrder.length];
+  const parts = t.s.split('___');
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + parts[0] + '<input class="ans gradable" data-answer="'+t.a+'" type="text" autocomplete="off">' + parts[1]
+    + '</div>';
+}
+
+/* ---- build the sheet ---- */
+let html = '';
+html += WS.teach('Possessive words',
+  'A <b>possessive adjective</b> comes <b>before</b> a noun: my, your, his, her, our, their, its.<br>'
+  + 'A <b>possessive pronoun</b> stands <b>alone</b>: mine, yours, his, hers, ours, theirs.');
+html += WS.section('Write the possessive adjective', cfg.adjective, gAdjective);
+html += WS.section('Write the possessive pronoun', cfg.pronoun, gPronoun);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • possessive words';
+
+/* ---- wiring (no chips in this unit) ---- */
+WS.wirePanel(cfg, ['adjective','pronoun'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

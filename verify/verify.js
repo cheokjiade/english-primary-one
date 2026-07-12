@@ -33,6 +33,16 @@ const TARGETS = [
     params: 'seed=verify&fill=4&choose=4' },
   { name: 'simple-present-tense', file: 'simple-present-tense.html',
     params: 'seed=verify&choose=4&form=4' },
+  { name: 'present-continuous-tense', file: 'present-continuous-tense.html',
+    params: 'seed=verify&ing=4&isare=4' },
+  { name: 'singular-plural-nouns', file: 'singular-plural-nouns.html',
+    params: 'seed=verify&write=4&choose=4' },
+  { name: 'countable-uncountable-nouns', file: 'countable-uncountable-nouns.html',
+    params: 'seed=verify&much=4&few=4' },
+  { name: 'personal-pronouns', file: 'personal-pronouns.html',
+    params: 'seed=verify&subject=4&object=4' },
+  { name: 'possessive-pronouns', file: 'possessive-pronouns.html',
+    params: 'seed=verify&adjective=4&pronoun=4' },
 ];
 
 // Higher per-section counts used ONLY for duplicate detection — each kept <= its content-pool size,
@@ -44,6 +54,11 @@ const DUP_PARAMS = {
   'subject-verb-agreement': 'choose=10&fill=8',
   'conjunctions': 'fill=10&choose=8',
   'simple-present-tense': 'choose=10&form=8',
+  'present-continuous-tense': 'ing=10&isare=8',
+  'singular-plural-nouns': 'write=10&choose=8',
+  'countable-uncountable-nouns': 'much=8&few=8',
+  'personal-pronouns': 'subject=10&object=8',
+  'possessive-pronouns': 'adjective=8&pronoun=8',
 };
 
 // Launch installed Chrome/Edge without downloading a browser.
@@ -105,8 +120,13 @@ async function drive(page, url, probe) {
     if (a != null) await inputs[i].fill(a.split('|')[0]);
   }
   // tappable chips — click every chip that should be selected
+  // (probe: leave the FIRST correct chip unclicked, so all-chip units — no typed input to blank — still fault)
+  let skipChip = probe;
   for (const c of await page.$$('.chip[data-ok]')) {
-    if ((await c.getAttribute('data-ok')) === '1') await c.click();
+    if ((await c.getAttribute('data-ok')) === '1') {
+      if (skipChip) { skipChip = false; continue; }
+      await c.click();
+    }
   }
   // drag / tap-to-order — tap the matching tile, then its slot
   for (const order of await page.$$('.dorder')) {
