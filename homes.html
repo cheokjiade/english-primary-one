@@ -25,6 +25,7 @@
   .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
   .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
   @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+  .passage { background:#f6f8fa; border:1px solid #dbe2ea; border-radius:8px; padding:12px 14px; font-size:15pt; line-height:1.7; margin:6px 0; }
 </style>
 </head>
 <body>
@@ -36,6 +37,7 @@
       <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
       <label data-tip="Tap a word on the left, then tap its match on the right.">Match <input type="number" id="f-match" min="0" max="6"></label>
       <label data-tip="Tap the correct word.">Choose <input type="number" id="f-choose" min="0" max="8"></label>
+      <label data-tip="Print-only: read the passage and circle the homes; a grown-up marks it.">Passage ✍️ <input type="number" id="f-passage" min="0" max="1"></label>
     </div>
     <div class="btns">
       <button class="go" id="b-apply">Generate</button>
@@ -61,7 +63,8 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 
 const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
   match:  WS.clamp(WS.toInt(WS.Q.get('match'),  5), 0, 6),
-  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8) };
+  choose: WS.clamp(WS.toInt(WS.Q.get('choose'), 4), 0, 8),
+  passage: WS.clamp(WS.toInt(WS.Q.get('passage'), 1), 0, 1) };
 
 const rng = WS.makeRng(cfg.seed);
 const { shuffle } = WS.helpers(rng);
@@ -159,6 +162,13 @@ function gChoose(i){
     + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
 }
 
+/* ---- print-only: reading passage (parent-graded — no gradable markup) ---- */
+const PASSAGE = 'Farmer Brown lives on a big farm. He keeps many animals. There are horses in the stable and cows in the barn. In the coop, there are roosters, hens and chicks. The pigs are in the sty. A mother duck swims with her ducklings in the pond. Farmer Brown can hear the sheep bleating in the pen.';
+function gPassage(){
+  return '<div class="item">Read the passage. With a coloured pencil, circle all the animal homes you can find.'
+    + '<div class="passage">'+PASSAGE+'</div></div>';
+}
+
 /* ---- build the sheet ---- */
 let html = '';
 html += WS.teach('Animal homes',
@@ -166,6 +176,8 @@ html += WS.teach('Animal homes',
   + 'A <b>dog</b> lives in a <b>kennel</b>; a <b>bird</b> lives in a <b>nest</b>; a <b>bee</b> lives in a <b>hive</b>.');
 html += buildMatch(cfg.match);
 html += WS.section('Choose the home', cfg.choose, gChoose);
+html += WS.teach('On paper ✍️', 'Do this on the printout — circle the homes and a grown-up marks it.');
+if (cfg.passage > 0) html += '<h2>Read and circle the homes</h2>' + gPassage();
 
 document.getElementById('sheet').innerHTML = html;
 document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • animal homes';
@@ -173,7 +185,7 @@ document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Prim
 /* ---- wiring ---- */
 wireMatch();
 WS.wireChips();
-WS.wirePanel(cfg, ['match','choose'], {
+WS.wirePanel(cfg, ['match','choose','passage'], {
   mark:  () => WS.mark({ extras: [markMatch] }),
   clear: () => WS.clearAll(resetMatch),
 });

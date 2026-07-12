@@ -26,6 +26,7 @@
   .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
   .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
   @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+  .writeline { border-bottom:2px solid var(--ink); height:34px; margin:8px 0; }
 </style>
 </head>
 <body>
@@ -37,6 +38,7 @@
       <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
       <label data-tip="Tap a verb, then tap its past tense to join them.">Match <input type="number" id="f-match" min="0" max="6"></label>
       <label data-tip="Tap the past-tense verb (the sentence says it already happened).">Choose past <input type="number" id="f-past" min="0" max="10"></label>
+      <label data-tip="Print-only: the child writes an answer and a grown-up marks it.">Answer ✍️ <input type="number" id="f-answer" min="0" max="8"></label>
     </div>
     <div class="btns">
       <button class="go" id="b-apply">Generate</button>
@@ -62,7 +64,8 @@ const SVGNS = 'http://www.w3.org/2000/svg';
 
 const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
   match: WS.clamp(WS.toInt(WS.Q.get('match'), 5), 0, 6),
-  past:  WS.clamp(WS.toInt(WS.Q.get('past'),  4), 0, 10) };
+  past:  WS.clamp(WS.toInt(WS.Q.get('past'),  4), 0, 10),
+  answer: WS.clamp(WS.toInt(WS.Q.get('answer'), 4), 0, 8) };
 
 const rng = WS.makeRng(cfg.seed);
 const { shuffle } = WS.helpers(rng);
@@ -164,6 +167,20 @@ function gPast(i){
     + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
 }
 
+/* ---- Section 3: answer the question (PRINT-ONLY, parent-graded — no gradable markup) ---- */
+const PANS = [
+  {q:'What did you have for breakfast?', h:'had'}, {q:'What did you drink just now?', h:'drank'},
+  {q:'Where did you go yesterday?', h:'went'},     {q:'What did you buy just now?', h:'bought'},
+  {q:'When did you sleep last night?', h:'slept'}, {q:'Why did you cry?', h:'cried'},
+  {q:'What did you eat for lunch?', h:'ate'},      {q:'Who did you see at the park?', h:'saw'},
+];
+const pansOrder = shuffle(PANS);
+function gAnswer(i){
+  const t = pansOrder[(i-1) % pansOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> Answer in a full sentence: <b>'+t.q+'</b> <i>(use "'+t.h+'")</i>'
+    + '<div class="writeline"></div></div>';
+}
+
 /* ---- build the sheet ---- */
 let html = '';
 html += WS.teach('Simple past tense',
@@ -171,6 +188,8 @@ html += WS.teach('Simple past tense',
   + 'Many verbs add <b>-ed</b>: <i>walk → walked</i>. Some change completely: <i>eat → ate, go → went</i>.');
 html += buildMatch(cfg.match);
 html += WS.section('Choose the past tense', cfg.past, gPast);
+html += WS.teach('On paper ✍️', 'Answer these on the printed sheet — a grown-up marks them.');
+html += WS.section('Answer the question', cfg.answer, gAnswer);
 
 document.getElementById('sheet').innerHTML = html;
 document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • simple past tense';
@@ -178,7 +197,7 @@ document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Prim
 /* ---- wiring ---- */
 wireMatch();
 WS.wireChips();
-WS.wirePanel(cfg, ['match','past'], {
+WS.wirePanel(cfg, ['match','past','answer'], {
   mark:  () => WS.mark({ extras: [markMatch] }),
   clear: () => WS.clearAll(resetMatch),
 });

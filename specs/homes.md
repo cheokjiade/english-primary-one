@@ -7,7 +7,7 @@ first introduced by `simple-past-tense.html`: a "Let's learn" box + "match each 
 
 File: `homes.html` (copied verbatim from `parents-and-young.html`, the vocab template — only the content
 strings, `PAIRS` and `CHOOSE` change; the matching-widget CSS/JS/wiring stays byte-identical). Config
-keys: `match`, `choose`.
+keys: `match`, `choose`, `passage`.
 
 ## Teaching block(s)
 
@@ -20,6 +20,12 @@ keys: `match`, `choose`.
 |---|-----|---------|-----------|-------------|-------------|---------|-----|
 | 1 | `match` | Match each animal to its home | **matching widget** (custom) | custom marker `markMatch` | animal→home pairs (10) | 5 | 6 |
 | 2 | `choose` | Choose the home | chip-select one | — | sentences (8) | 4 | 8 |
+| 3 | `passage` | Read and circle the homes | reading passage (**print-only**) | parent-graded (no gradable markup) | fixed farm passage (1) | 1 | 1 |
+
+**Print-only section (`passage`):** a short reading passage the child reads on the printout, circling
+the animal homes with a coloured pencil; a grown-up marks it. It emits **no gradable markup** (no
+`.item` chips / matching data-attrs), so it is invisible to the marker, the dup-scanner and the verifier
+— purely additive and does not change the happy-path/probe scores. Default 1, max 1 (0 hides it).
 
 **Distinctness:** section 2 shuffles its pool, indexed by question number → distinct sentence + correct
 chip. The matching widget draws `match` **distinct pairs without replacement**, so its animals/homes are

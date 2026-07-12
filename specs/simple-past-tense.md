@@ -5,7 +5,7 @@ source workbook (`input/IMG_6919–6922`): a "Let's learn" box + "match each ver
 "circle/tick the correct form", "answer with a past-tense verb". This unit **introduces the reusable
 matching widget** (used later by the vocabulary units). Seeded generator; distinct questions.
 
-File: `simple-past-tense.html` (copied from `beginning-sounds.html`). Config keys: `match`, `past`.
+File: `simple-past-tense.html` (copied from `beginning-sounds.html`). Config keys: `match`, `past`, `answer`.
 
 ## Teaching block(s)
 
@@ -18,6 +18,7 @@ File: `simple-past-tense.html` (copied from `beginning-sounds.html`). Config key
 |---|-----|---------|-----------|-------------|-------------|---------|-----|
 | 1 | `match` | Match each verb to its past tense | **matching widget** (custom) | custom marker `markMatch` | verb→past pairs (16) | 5 | 6 |
 | 2 | `past` | Choose the past tense | chip-select one | — | sentences (12) | 4 | 10 |
+| 3 | `answer` | Answer the question | write-line (**print-only**, parent-graded) | — (no gradable markup) | questions (8) | 4 | 8 |
 
 **Distinctness:** section 2 shuffles its pool, indexed by question number → distinct sentence + correct
 chip. The matching widget draws `match` **distinct pairs without replacement**, so its verbs/answers are

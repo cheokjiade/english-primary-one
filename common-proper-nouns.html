@@ -34,6 +34,7 @@
   .shown { color:#555; }
   input.capline { display:block; width:100%; max-width:520px; font:inherit; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); margin-top:4px; }
   @media print { .aword.correct, .aword.incorrect { background:#fff; } }
+  .trace { color:#cfd3d8; font-size:20pt; letter-spacing:3px; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -48,6 +49,7 @@
       <label data-tip="In each sentence, circle the common nouns and underline the proper nouns.">Find <input type="number" id="f-find" min="0" max="8"></label>
       <label data-tip="Drag the words from the box into the right blanks.">Fill blanks <input type="number" id="f-blank" min="0" max="8"></label>
       <label data-tip="Rewrite each sentence with capital letters for the proper nouns.">Capitals <input type="number" id="f-capital" min="0" max="8"></label>
+      <label data-tip="Print-only: the child traces each name and a grown-up marks it.">Trace ✍️ <input type="number" id="f-trace" min="0" max="12"></label>
     </div>
     <div class="btns">
       <button class="go" id="b-apply">Generate</button>
@@ -76,7 +78,8 @@ const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
   sort:    WS.clamp(WS.toInt(WS.Q.get('sort'),    4), 0, 12),
   find:    WS.clamp(WS.toInt(WS.Q.get('find'),    3), 0, 8),
   blank:   WS.clamp(WS.toInt(WS.Q.get('blank'),   4), 0, 8),
-  capital: WS.clamp(WS.toInt(WS.Q.get('capital'), 3), 0, 8) };
+  capital: WS.clamp(WS.toInt(WS.Q.get('capital'), 3), 0, 8),
+  trace:   WS.clamp(WS.toInt(WS.Q.get('trace'),   4), 0, 12) };
 
 const rng = WS.makeRng(cfg.seed);
 const { randInt, pick, shuffle, distinct, balanced } = WS.helpers(rng);
@@ -280,6 +283,14 @@ function buildFind(count){
     + '<div id="sec-find" class="annot" data-proper="underline">' + toolbar('underline') + rows + '</div>';
 }
 
+/* ---- print-only: trace the proper nouns (parent-graded — no gradable markup) ---- */
+const TRACE = ['Colin','Amy','Olivia','Liam','Singapore','China','Japan','India','Ben','Australia','Sara','Nina'];
+const traceOrder = shuffle(TRACE);
+function gTrace(i){
+  const w = traceOrder[(i-1) % traceOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> Trace this special name (it begins with a capital letter): <span class="trace">'+w+'</span></div>';
+}
+
 /* ---- build the sheet: teach, then practise (order = pedagogical 1 → 5) ---- */
 let html = '';
 html += WS.teach('Common and proper nouns',
@@ -292,6 +303,8 @@ html += buildFind(cfg.find);
 html += buildBlank(cfg.blank);
 html += WS.teach('Capital letters', 'A proper noun always begins with a <b>capital letter</b>. Read each sentence and write it correctly.');
 html += WS.section('Rewrite with capital letters', cfg.capital, gCapital);
+html += WS.teach('On paper ✍️', 'Trace each special name on the printed sheet — a grown-up marks it.');
+html += WS.section('Trace the proper nouns', cfg.trace, gTrace);
 
 document.getElementById('sheet').innerHTML = html;
 document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • common & proper nouns';
@@ -299,7 +312,7 @@ document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Prim
 /* ---- wiring (shared engine + this unit's bespoke pieces) ---- */
 wireAnnot();             // annotation widgets (sections 2 & 3)
 WS.enableDragOrder();    // drag / tap-to-place tiles (section 4)
-WS.wirePanel(cfg, ['write','sort','find','blank','capital'], {
+WS.wirePanel(cfg, ['write','sort','find','blank','capital','trace'], {
   mark:  () => WS.mark({ extras: [markSort, markFind] }),
   clear: () => WS.clearAll(resetAnnotations),
 });

@@ -16,6 +16,7 @@
   .chip.vchip { font-size:16pt; min-width:56px; }
   .blankmark { letter-spacing:1px; font-weight:bold; }
   .sel-block { margin-top:4px; }
+  .writeline { border-bottom:2px solid var(--ink); height:34px; margin:8px 0; }
 </style>
 </head>
 <body>
@@ -27,6 +28,7 @@
       <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
       <label data-tip="Write the -ing form of the verb (run &rarr; running).">Add -ing <input type="number" id="f-ing" min="0" max="10"></label>
       <label data-tip="Tap 'is' (one) or 'are' (more than one) for each sentence.">is or are? <input type="number" id="f-isare" min="0" max="10"></label>
+      <label data-tip="Print-only: the child writes an answer and a grown-up marks it.">Answer ✍️ <input type="number" id="f-answer" min="0" max="8"></label>
     </div>
     <div class="btns">
       <button class="go" id="b-apply">Generate</button>
@@ -51,7 +53,8 @@
 
 const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
   ing:   WS.clamp(WS.toInt(WS.Q.get('ing'),   4), 0, 10),
-  isare: WS.clamp(WS.toInt(WS.Q.get('isare'), 4), 0, 10) };
+  isare:  WS.clamp(WS.toInt(WS.Q.get('isare'),  4), 0, 10),
+  answer: WS.clamp(WS.toInt(WS.Q.get('answer'), 4), 0, 8) };
 
 const rng = WS.makeRng(cfg.seed);
 const { shuffle } = WS.helpers(rng);
@@ -110,19 +113,35 @@ function gIsare(i){
     + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
 }
 
+/* ---- Section 3: answer the question (PRINT-ONLY, parent-graded — no gradable markup) ---- */
+const PCANS = [
+  {q:'What is she doing?', h:'run'},          {q:'What are they doing?', h:'play'},
+  {q:'What is he doing?', h:'read'},          {q:'What is the baby doing?', h:'cry'},
+  {q:'What is the dog doing?', h:'bark'},     {q:'What are the birds doing?', h:'sing'},
+  {q:'What is your mother doing?', h:'cook'}, {q:'What are the children doing?', h:'jump'},
+];
+const pcaOrder = shuffle(PCANS);
+function gAnswer(i){
+  const t = pcaOrder[(i-1) % pcaOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> Answer in a full sentence: <b>'+t.q+'</b> <i>(verb: '+t.h+')</i>'
+    + '<div class="writeline"></div></div>';
+}
+
 /* ---- build the sheet ---- */
 let html = '';
 html += WS.teach('Present continuous tense',
   'The present continuous tense shows an action happening <b>now</b>. Use <b>is</b> or <b>are</b> + the verb + <b>-ing</b>.<br><i>He is running. They are playing.</i>');
 html += WS.section('Add -ing to the verb', cfg.ing, gIng);
 html += WS.section('is or are?', cfg.isare, gIsare);
+html += WS.teach('On paper ✍️', 'Answer these on the printed sheet — a grown-up marks them.');
+html += WS.section('Answer the question', cfg.answer, gAnswer);
 
 document.getElementById('sheet').innerHTML = html;
 document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • present continuous tense';
 
 /* ---- wiring ---- */
 WS.wireChips();
-WS.wirePanel(cfg, ['ing','isare'], {
+WS.wirePanel(cfg, ['ing','isare','answer'], {
   mark:  () => WS.mark(),
   clear: () => WS.clearAll(),
 });
