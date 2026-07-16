@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 33 — Classifying (Primary One English, COMPREHENSION).
+     Built from beginning-sounds.html; matching widget copied from homes.html
+     (see AGENTS.md). Two sections: match each set of words to its group ·
+     sort each word under the correct heading (adapted to chip-select-one).
+     Source: workbook pages 141-143.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classifying — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:60px; }
+  /* matching widget (copied from homes.html, logic byte-identical; widened here for multi-word sets) */
+  .match { position:relative; display:flex; justify-content:space-between; gap:40px; max-width:660px; margin:6px 0 10px; }
+  .mcol { display:flex; flex-direction:column; gap:16px; z-index:2; }
+  .colhead { font-family:Verdana,sans-serif; font-size:10.5pt; font-weight:bold; color:#666; text-align:center; margin-bottom:4px; }
+  .mitem { font:inherit; font-size:15pt; padding:8px 14px; border:2.5px solid var(--ink); border-radius:12px; background:#fff; cursor:pointer; min-width:112px; text-align:center; }
+  .mitem.mset { font-size:13pt; max-width:220px; line-height:1.35; }
+  .mitem.msel { background:#fde68a; }
+  .mitem.mk-correct { border-color:var(--right); background:#bbf7d0; }
+  .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
+  .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+  @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🧺 Classifying — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap a set of words on the left, then tap the group it belongs to on the right.">Match sets <input type="number" id="f-match" min="0" max="9"></label>
+      <label data-tip="Read the word, then tap the heading it belongs under.">Sort words <input type="number" id="f-sort" min="0" max="18"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap a set of words, then tap its group; tap the heading a word belongs under. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Classifying</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🧺⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+/* ---- config: one key per section (URL param + panel field + count + generator) ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  match: WS.clamp(WS.toInt(WS.Q.get('match'), 6), 0, 9),
+  sort:  WS.clamp(WS.toInt(WS.Q.get('sort'),  8), 0, 18) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: matching widget (reusable — copied from homes.html; see AGENTS.md) ---- */
+/* PAIRS: {v: a set of words, p: the group they belong to}. Source: workbook pages 141-142,
+   "Match each set of words to the correct group." Every group name is unique, so the match is
+   unambiguous. */
+const PAIRS = [
+  {v:'pens · pencils · scissors · rulers',        p:'stationery'},
+  {v:'hockey · football · tennis · swimming',     p:'sports'},
+  {v:'sunny · windy · rainy · cloudy',             p:'weather'},
+  {v:'roses · hibiscus · lilies · orchids',        p:'flowers'},
+  {v:'hammers · nails · saws · screwdrivers',      p:'tools'},
+  {v:'doctors · mechanics · hawkers · teachers',   p:'occupations'},
+  {v:'tigers · monkeys · cats · polar bears',      p:'animals'},
+  {v:'happy · angry · scared · excited',           p:'feelings'},
+  {v:'library · school · airport · hospital',      p:'places'},
+];
+const MATCH_HEADS = ['Words', 'Group'];
+function buildMatch(count){
+  if (count <= 0) return '';
+  const chosen = shuffle(PAIRS).slice(0, count);
+  const rights = shuffle(chosen.map(c => c.p));
+  const leftHtml = chosen.map(c => '<button type="button" class="mitem mleft mset" data-answer="'+c.p+'">'+c.v+'</button>').join('');
+  const rightHtml = rights.map(p => '<button type="button" class="mitem mright" data-val="'+p+'">'+p+'</button>').join('');
+  return '<h2>Match each set of words to the correct group</h2>'
+    + '<div id="sec-match" class="match"><svg class="mlines"></svg>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[0]+'</div>'+leftHtml+'</div>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[1]+'</div>'+rightHtml+'</div></div>';
+}
+function lineColor(l){ return l.classList.contains('mk-correct') ? 'var(--right)' : l.classList.contains('mk-incorrect') ? 'var(--wrong)' : 'var(--accent)'; }
+function drawMatch(m){
+  const svg = m.querySelector('.mlines'); svg.innerHTML = '';
+  const box = m.getBoundingClientRect();
+  m.querySelectorAll('.mleft').forEach(l => {
+    if (!l.dataset.conn) return;
+    const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+    if (!r) return;
+    const lr = l.getBoundingClientRect(), rr = r.getBoundingClientRect();
+    const line = document.createElementNS(SVGNS, 'line');
+    line.setAttribute('x1', lr.right - box.left); line.setAttribute('y1', lr.top + lr.height/2 - box.top);
+    line.setAttribute('x2', rr.left - box.left);  line.setAttribute('y2', rr.top + rr.height/2 - box.top);
+    line.setAttribute('stroke', lineColor(l)); line.setAttribute('stroke-width', '4'); line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+  });
+}
+function wireMatch(){
+  document.querySelectorAll('.match').forEach(m => {
+    let sel = null;
+    m.querySelectorAll('.mleft').forEach(l => l.addEventListener('click', () => {
+      m.querySelectorAll('.mleft').forEach(x => x.classList.remove('msel')); sel = l; l.classList.add('msel');
+    }));
+    m.querySelectorAll('.mright').forEach(r => r.addEventListener('click', () => {
+      if (!sel) return;
+      sel.dataset.conn = r.dataset.val; sel.classList.remove('msel','mk-correct','mk-incorrect'); r.classList.remove('mk-correct','mk-incorrect');
+      sel = null; drawMatch(m);
+    }));
+  });
+  window.addEventListener('resize', () => document.querySelectorAll('.match').forEach(drawMatch));
+}
+function resetMatch(){
+  document.querySelectorAll('.match .mleft').forEach(l => { delete l.dataset.conn; l.classList.remove('msel','mk-correct','mk-incorrect'); });
+  document.querySelectorAll('.match .mright').forEach(r => r.classList.remove('mk-correct','mk-incorrect'));
+  document.querySelectorAll('.match .mlines').forEach(s => s.innerHTML = '');
+}
+function markMatch(){ let total = 0, right = 0;
+  document.querySelectorAll('#sec-match').forEach(m => {
+    m.querySelectorAll('.mleft').forEach(l => { total++;
+      const ok = l.dataset.conn === l.dataset.answer;
+      l.classList.remove('mk-correct','mk-incorrect'); l.classList.add(ok ? 'mk-correct' : 'mk-incorrect');
+      const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+      if (r) { r.classList.remove('mk-correct','mk-incorrect'); r.classList.add(ok ? 'mk-correct' : 'mk-incorrect'); }
+      if (ok) right++;
+    });
+    drawMatch(m);
+  });
+  return { total, right };
+}
+window.__wsAutoSolve = function(){
+  document.querySelectorAll('.match .mleft').forEach(l => { l.dataset.conn = l.dataset.answer; });
+  document.querySelectorAll('.match').forEach(drawMatch);
+};
+
+/* ---- Section 2: sort the word under its heading (chip-select, one answer) ---- */
+/* Source: workbook page 143, "Sort out the words. Write them under the correct heading." — adapted
+   to a gradable chip-select: show the word, offer its correct heading plus one distractor heading
+   drawn from a fixed opposing pair (Cutlery/Insects, Clothes/Food, Utensils/Stationery), matching
+   the six headings printed on the page. 18 words, 3 per heading. */
+const SORT = [
+  {w:'knife',     h:'Cutlery',    o:'Insects'},
+  {w:'spoon',     h:'Cutlery',    o:'Insects'},
+  {w:'fork',      h:'Cutlery',    o:'Insects'},
+  {w:'ladybird',  h:'Insects',    o:'Cutlery'},
+  {w:'butterfly', h:'Insects',    o:'Cutlery'},
+  {w:'bee',       h:'Insects',    o:'Cutlery'},
+  {w:'T-shirt',   h:'Clothes',    o:'Food'},
+  {w:'jeans',     h:'Clothes',    o:'Food'},
+  {w:'blouse',    h:'Clothes',    o:'Food'},
+  {w:'rice',      h:'Food',       o:'Clothes'},
+  {w:'bread',     h:'Food',       o:'Clothes'},
+  {w:'noodles',   h:'Food',       o:'Clothes'},
+  {w:'wok',       h:'Utensils',   o:'Stationery'},
+  {w:'pan',       h:'Utensils',   o:'Stationery'},
+  {w:'pot',       h:'Utensils',   o:'Stationery'},
+  {w:'paper',     h:'Stationery', o:'Utensils'},
+  {w:'pencil',    h:'Stationery', o:'Utensils'},
+  {w:'ink',       h:'Stationery', o:'Utensils'},
+];
+const sortOrder = shuffle(SORT);
+function gSort(i){
+  const t = sortOrder[(i-1) % sortOrder.length];
+  const opts = shuffle([t.h, t.o]);
+  const chips = opts.map(o => '<button type="button" class="chip vchip" data-ok="'+(o===t.h?1:0)+'">'+o+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> Which heading does <b>'+t.w+'</b> belong under?'
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet: teach, then practise ---- */
+let html = '';
+html += WS.teach('Classifying and sorting',
+  'We put words that are alike into the same <b>group</b>.<br>'
+  + '<b>hockey, football, tennis, swimming</b> — these are all <b>sports</b>.<br>'
+  + '<b>roses, hibiscus, lilies, orchids</b> — these are all <b>flowers</b>.');
+html += buildMatch(cfg.match);
+
+html += WS.teach('Sorting words',
+  'Every word belongs under a heading. Read the word, then tap the heading it belongs under.<br>'
+  + '<b>bee</b> is an <b>insect</b>, but <b>pencil</b> is a piece of <b>stationery</b>.');
+html += WS.section('Sort the words under the correct heading', cfg.sort, gSort);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • classifying';
+
+/* ---- wiring ---- */
+wireMatch();
+WS.wireChips();
+WS.wirePanel(cfg, ['match','sort'], {
+  mark:  () => WS.mark({ extras: [markMatch] }),
+  clear: () => WS.clearAll(resetMatch),
+});
+</script>
+</body>
+</html>

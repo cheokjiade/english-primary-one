@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Inferring — Primary One English (COMPREHENSION, unit 36).
+     Copied from beginning-sounds.html; source: workbook pp.149-151 ("Read the
+     sentences, tick the correct picture" / "Look at the pictures, tick the
+     correct sentences"). Adapted picture -> text: each picture choice becomes
+     a one-step inference in words. Two chip-select-one sections:
+       - infer: a clue sentence with a "___" blank -> pick what must be true (3 options)
+       - truth: a tiny scene description -> pick the sentence that is true of it (2 options)
+     See specs/inferring.md.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inferring — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* inferring-specific components (topic style stays in the page; shared style is in worksheet.css) */
+  .chip.ichip { font-size:15pt; }
+  .chip.tchip { font-size:15pt; text-align:left; justify-content:flex-start; min-width:230px; }
+  .chips.stack { flex-direction:column; align-items:flex-start; gap:8px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>💡 Inferring — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the clue sentence, then tap what you can tell.">Infer it <input type="number" id="f-infer" min="0" max="12"></label>
+      <label data-tip="Read what is happening, then tap the sentence that is true.">True or not <input type="number" id="f-truth" min="0" max="12"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Read each clue, then tap the answer. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Inferring</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 💡⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  infer: WS.clamp(WS.toInt(WS.Q.get('infer'), 4), 0, 12),
+  truth: WS.clamp(WS.toInt(WS.Q.get('truth'), 4), 0, 12) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: infer it (chip-select one, per-item options) ----
+   Each item is a clue sentence with a "___" blank; pick the one-step inference that must be true.
+   From workbook p.149-150 (tick-the-picture): father drives -> car; Peter kind/helpful -> helps the
+   old man; Samantha likes to read -> reads a book; round cake; long-sleeved blouse; Alvin's heavy bag.
+   Plus same-spirit extras. */
+const INFER = [
+  {s:'My father drives to work every day. He goes to work by ___.', opts:['car','bus','taxi'], a:'car'},
+  {s:"Peter is a kind and helpful boy. When he sees an old man fall down, Peter will ___.", opts:['help him up','walk away','laugh at him'], a:'help him up'},
+  {s:'Samantha likes to read. Before bedtime, she will most likely ___.', opts:['read a book','bounce a ball','watch television'], a:'read a book'},
+  {s:'My mother bought me a round cake. The cake is shaped like a ___.', opts:['circle','square','loaf'], a:'circle'},
+  {s:'My mother has a blouse with long sleeves. Her blouse has ___.', opts:['long sleeves','short sleeves','no sleeves'], a:'long sleeves'},
+  {s:"Alvin bends under his school bag. His bag is ___.", opts:['heavy','light','new'], a:'heavy'},
+  {s:'It is raining heavily outside. Before Mum goes out, she should bring an ___.', opts:['umbrella','kite','sun hat'], a:'umbrella'},
+  {s:'Ali is shivering in the cold wind. Ali should put on a ___.', opts:['warm jacket','swimsuit','singlet'], a:'warm jacket'},
+  {s:'The soup is still too hot to drink. Mei should ___ before she drinks it.', opts:['wait for it to cool','drink it quickly','pour it away'], a:'wait for it to cool'},
+  {s:"David's shirt and shorts are covered in mud. David has most likely been ___.", opts:['playing outside','sleeping in bed','reading quietly'], a:'playing outside'},
+  {s:'The baby has not been fed since morning and is crying loudly. The baby is probably ___.', opts:['hungry','full','asleep'], a:'hungry'},
+  {s:"Grandma's plate is empty and she pats her tummy happily. Grandma has ___ her dinner.", opts:['finished','not started','thrown away'], a:'finished'},
+];
+const inferOrder = shuffle(INFER);
+function gInfer(i){
+  const t = inferOrder[(i-1) % inferOrder.length];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip ichip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: true or not? (chip-select one, per-item options) ----
+   Each item is a tiny scene description; pick the sentence that is true of it (the other is false).
+   From workbook p.151 (tick-the-sentence): thermometer -> sick; empty plate -> enjoyed lunch; Sue
+   pulling back from the dog -> afraid; Tim with a medal -> won the race; children by a rainy window
+   -> indoors. Plus same-spirit extras. */
+const TRUTH = [
+  {scene:'Mei lies in bed with a thermometer in her mouth.', opts:['She is sick.','She is well.'], a:'She is sick.'},
+  {scene:"Ravi's plate is empty and he smiles as he pats his tummy.", opts:['He enjoyed his lunch.','He did not enjoy his lunch.'], a:'He enjoyed his lunch.'},
+  {scene:"Sue steps back and grips her father's hand tightly when she sees the dog.", opts:['Sue is afraid of the dog.','Sue is fond of the dog.'], a:'Sue is afraid of the dog.'},
+  {scene:'Tim throws his hands up and wears a shiny medal round his neck.', opts:['Tim won the race.','Tim did not win the race.'], a:'Tim won the race.'},
+  {scene:'The children stand at the window and watch the rain fall outside.', opts:['The children are indoors.','The children are outdoors.'], a:'The children are indoors.'},
+  {scene:"Jack's ice cream falls onto the ground and his eyes fill with tears.", opts:['Jack is sad.','Jack is happy.'], a:'Jack is sad.'},
+  {scene:'Mrs Lee waters her plants every morning before school.', opts:['Mrs Lee takes care of her plants.','Mrs Lee never waters her plants.'], a:'Mrs Lee takes care of her plants.'},
+  {scene:'The library is silent, and everyone is reading quietly.', opts:['The children are quiet.','The children are noisy.'], a:'The children are quiet.'},
+  {scene:"Farid's shirt is soaked and his hair is dripping wet.", opts:['Farid has been swimming.','Farid has been sleeping.'], a:'Farid has been swimming.'},
+  {scene:'Nora covers her ears when the thunder booms outside.', opts:['Nora is scared of the loud noise.','Nora enjoys the loud noise.'], a:'Nora is scared of the loud noise.'},
+  {scene:'The kitten curls up and closes its eyes on the warm mat.', opts:['The kitten is sleepy.','The kitten is hungry.'], a:'The kitten is sleepy.'},
+  {scene:"Every toy is back in its box, and Ben's room is neat.", opts:['Ben has tidied his room.','Ben has made a mess.'], a:'Ben has tidied his room.'},
+];
+const truthOrder = shuffle(TRUTH);
+function gTruth(i){
+  const t = truthOrder[(i-1) % truthOrder.length];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip tchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> '+t.scene
+    + '<div class="sel-block" data-mode="one"><div class="chips stack">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Inferring',
+  'A sentence does not always tell us everything. Read the clue carefully, then use it to figure out the answer.<br>'
+  + '<i>My father drives to work every day.</i> &rarr; He goes by <b>car</b>.<br>'
+  + '<i>Alvin bends under his school bag.</i> &rarr; His bag is <b>heavy</b>.');
+html += WS.section('Read the clue. What can you tell?', cfg.infer, gInfer);
+
+html += WS.teach('Is it true?',
+  'Look at what is happening, then tap the sentence that tells the truth about it.<br>'
+  + '<i>Mei lies in bed with a thermometer in her mouth.</i> &rarr; <b>She is sick.</b> (not <i>She is well.</i>)');
+html += WS.section('Look at what happens. Tick the true sentence.', cfg.truth, gTruth);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • inferring';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();          // tappable chips (radio for data-mode="one")
+WS.wirePanel(cfg, ['infer','truth'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

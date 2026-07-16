@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 40 — Open-Ended. Primary One English (COMPREHENSION).
+     Source: workbook pp.174-181 — four short passages (Ben's grandfather,
+     Olivia's birthday, Jonathan, Kathleen the ballerina). Each book page pairs
+     "Read the passage carefully. Then answer the questions." with
+     "Read the questions and fill in the answers." — scaffolded fill-in-the-blank
+     answers ("He is ___.") plus a couple of genuinely open "What do you think...?"
+     questions per passage.
+     Sections:
+       - answer: typed fill-in-the-blank comprehension question. Each item carries
+         its own short quoted excerpt (in a bordered .excerpt box, styled like the
+         .passage-box in multiple-choice.html, unit 39 — same COMPREHENSION strand)
+         so it is self-contained even though the pool interleaves all four passages.
+         Pool of 19 across the four passages.
+       - think:  PRINT-ONLY, parent-graded — genuinely open "What do you think...?" /
+         "Would you...?" questions (pool of 6). No gradable markup; a grown-up marks it.
+     Copied from beginning-sounds.html. See AGENTS.md and specs/open-ended.md.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open-Ended — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* open-ended-specific components (topic style stays in the page; shared style is in worksheet.css) */
+  .excerpt { border:2px solid var(--ink); border-radius:10px; padding:8px 14px; margin:6px 0 8px; background:#fafafa; font-size:13.5pt; line-height:1.5; }
+  .excerpt b { font-family:Verdana,sans-serif; font-size:10.5pt; }
+  .qline { font-weight:bold; margin:4px 0 8px; }
+  .qrow { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:250px; }
+  .writeline { border-bottom:2px solid var(--ink); height:34px; margin:8px 0; }
+  @media print { .excerpt { background:#fff; } }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>💬 Open-Ended — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the short excerpt in the box, then fill in the missing word(s) to answer the question.">Fill in the answer <input type="number" id="f-answer" min="0" max="12"></label>
+      <label data-tip="Print-only: the child writes their own ideas in full sentences on the printout, and a grown-up marks it.">What do you think? ✍️ <input type="number" id="f-think" min="0" max="6"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Read the excerpt in the box, then type the missing word(s) — not case-sensitive. The last section is written on the printout (a grown-up marks it). Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Open-Ended</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 💬⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  answer: WS.clamp(WS.toInt(WS.Q.get('answer'), 6), 0, 12),
+  think:  WS.clamp(WS.toInt(WS.Q.get('think'),  3), 0, 6) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: fill in the answer (typed input, default `text` kind + one `num` item) ----
+   Four short passages (workbook pp.174-181). Each pool entry carries its own quoted excerpt
+   (the sentence the answer comes from) so the item is self-contained however the pool shuffles
+   the four stories together. `tpl` marks the blank with "{}"; the scaffold sentence mirrors the
+   book's own "He is ___." style completions. */
+const ANSWER = [
+  // Ben's grandfather (7007L/R.jpg)
+  { src:'Ben’s grandfather', excerpt:'“He is 74 years old.”',
+    q:'How old is Ben’s grandfather?', tpl:'He is {}.', ans:'74|74 years old' },
+  { src:'Ben’s grandfather', excerpt:'“Ben’s grandfather lives with his family.”',
+    q:'Where does Ben’s grandfather live?', tpl:'He lives with {}.', ans:'his family|family' },
+  { src:'Ben’s grandfather', excerpt:'“His legs are very weak and he cannot walk or stand up for long.”',
+    q:'Why can’t Ben’s grandfather walk or stand up for too long?', tpl:'His legs {}.', ans:'are very weak|very weak' },
+  { src:'Ben’s grandfather', excerpt:'“Every morning, he takes a short walk to the garden.”',
+    q:'Where does Ben’s grandfather go every morning?', tpl:'He goes to {}.', ans:'the garden|garden' },
+  { src:'Ben’s grandfather', excerpt:'“He likes to read his newspapers in the garden.”',
+    q:'What does he like to do in the garden?', tpl:'He likes to {}.', ans:'read his newspapers|read newspapers|read the newspapers' },
+
+  // Olivia's birthday (7008L/R.jpg)
+  { src:'Olivia’s birthday', excerpt:'“It was Olivia’s fifth birthday.”',
+    q:'Which birthday was Olivia celebrating?', tpl:'She was celebrating her {} birthday.', ans:'fifth|5th' },
+  { src:'Olivia’s birthday', excerpt:'“The cake was decorated with pictures of animals and five candles.”',
+    q:'What decorations were on the cake?', tpl:'There were {}.', ans:'pictures of animals and five candles|animals and five candles' },
+  { src:'Olivia’s birthday', excerpt:'“She received a book, a cooking set and a soft toy bunny.”',
+    q:'How many presents did Olivia receive?', tpl:'Olivia received {} presents.', ans:'3', kind:'num' },
+  { src:'Olivia’s birthday', excerpt:'“She loved the grey bunny the most!”',
+    q:'Which was Olivia’s favourite present?', tpl:'Her favourite present was the {}.', ans:'soft toy bunny|grey bunny|the grey bunny|bunny' },
+
+  // Jonathan (7009L/R.jpg)
+  { src:'Jonathan', excerpt:'“At home, my family and I call him ‘Jon’ or ‘Jonni’.”',
+    q:'What does Jonathan’s family call him?', tpl:'They call him {}.', ans:'Jon|Jonni' },
+  { src:'Jonathan', excerpt:'“He is tall and thin.”',
+    q:'Describe Jonathan’s size.', tpl:'He is {}.', ans:'tall and thin' },
+  { src:'Jonathan', excerpt:'“His favourite animal is the horse.”',
+    q:'What is Jonathan’s favourite animal?', tpl:'His favourite animal is {}.', ans:'the horse|horse|horses' },
+  { src:'Jonathan', excerpt:'“He likes to eat all kinds of fruits especially grapes.”',
+    q:'What is Jonathan’s favourite fruit?', tpl:'His favourite fruit is {}.', ans:'grapes' },
+
+  // Kathleen (7010L/R.jpg)
+  { src:'Kathleen', excerpt:'“I call her ‘Kitty’ for short.”',
+    q:'What is Kathleen’s other name?', tpl:'Her other name is {}.', ans:'Kitty' },
+  { src:'Kathleen', excerpt:'“Kitty enjoys singing and dancing.”',
+    q:'What does Kathleen like to do?', tpl:'She likes to {}.', ans:'sing and dance|singing and dancing' },
+  { src:'Kathleen', excerpt:'“She goes to a ballet school near her home.”',
+    q:'Where does Kathleen learn ballet?', tpl:'She learns ballet at {}.', ans:'a ballet school near her home|ballet school near her home|a ballet school|ballet school' },
+  { src:'Kathleen', excerpt:'“Kitty wants to be a ballerina when she grows up.”',
+    q:'What does Kathleen want to be when she grows up?', tpl:'She wants to be {}.', ans:'a ballerina|ballerina' },
+  { src:'Kathleen', excerpt:'“She wants to dance on the stage.”',
+    q:'Where does Kathleen want to dance?', tpl:'She wants to dance on {}.', ans:'the stage|stage' },
+  { src:'Kathleen', excerpt:'“She wants to perform in other countries too!”',
+    q:'Where else does Kathleen want to perform?', tpl:'She wants to perform in {}.', ans:'other countries|in other countries' },
+];
+const answerOrder = shuffle(ANSWER);
+function gAnswer(i){
+  const t = answerOrder[(i-1) % answerOrder.length];
+  const parts = t.tpl.split('{}');
+  const kindAttr = t.kind ? ' data-kind="'+t.kind+'"' : '';
+  return '<div class="item"><span class="label">'+i+'.</span>'
+    + '<div class="excerpt"><b>'+t.src+' —</b> '+t.excerpt+'</div>'
+    + '<div class="qline">'+t.q+'</div>'
+    + '<div class="qrow">'+parts[0]
+    + '<input class="ans gradable"'+kindAttr+' data-answer="'+t.ans+'" type="text" autocomplete="off">'
+    + parts[1] + '</div></div>';
+}
+
+/* ---- Section 2: what do you think? (PRINT-ONLY, parent-graded — no gradable markup) ----
+   Genuinely open questions in the book's own "What do you think...?" style (Jonathan's free-time
+   question is the book's literal Q3 on 7009R.jpg); the rest extend the same style to the other three
+   passages so every story gets at least one open question. Two .writeline per item, matching the two
+   ruled lines the book gives these particular questions. */
+const THINK = [
+  { src:'Ben’s grandfather', q:'What do you think Ben likes to do with his grandfather?' },
+  { src:'Olivia’s birthday', q:'How do you think Olivia felt when she saw her birthday cake?' },
+  { src:'Olivia’s birthday', q:'Which of Olivia’s three presents would you like best? Why?' },
+  { src:'Jonathan', q:'What do you think Jonathan likes to do in his free time?' },
+  { src:'Kathleen', q:'What do you think Kathleen practises at her ballet school?' },
+  { src:'Kathleen', q:'Would you like to learn ballet like Kathleen? Why or why not?' },
+];
+const thinkOrder = shuffle(THINK);
+function gThink(i){
+  const t = thinkOrder[(i-1) % thinkOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span>'
+    + '<div class="qline"><i>'+t.src+':</i> '+t.q+'</div>'
+    + '<div class="writeline"></div><div class="writeline"></div></div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Open-ended comprehension',
+  'Read the passage carefully. Then fill in the answer — the words you need are in the box.<br>'
+  + '<span class="ex"><b>Passage:</b> “He is 74 years old.” <b>Question:</b> How old is he? <b>Answer:</b> He is <b>74</b>.</span>');
+html += WS.section('Read the questions. Fill in the answers.', cfg.answer, gAnswer);
+
+html += WS.teach('On paper ✍️',
+  'Do this last part on the printed sheet — a grown-up marks it. Think about the story, then write your own ideas in full sentences.');
+html += WS.section('What do you think?', cfg.think, gThink);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • open-ended comprehension';
+
+/* ---- wiring (shared engine) ---- */
+WS.wirePanel(cfg, ['answer','think'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

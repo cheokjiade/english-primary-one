@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 38 — Sentence Cloze. Primary One English (COMPREHENSION).
+     Read a short passage, then either tap the correct answer to a question about it
+     (chip-select one) or type the missing word into a cloze sentence (typed input,
+     a "helping words" bank shown per item — or the source passage, when the book asks
+     the child to find the word by re-reading rather than from a bank).
+     Copied from beginning-sounds.html. See AGENTS.md.
+     Source: workbook pages 158-167 — bookshop (Jenny) · swimming pool (Aryan) ·
+     birthday bicycle (Bryan) · aquarium (Peter & Paul) · library (Sarah) ·
+     playground (Ai-Ling, Tom & Sue) · cousins (Samantha & Kelly).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentence Cloze — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* sentence-cloze-specific components (shared style is in worksheet.css) */
+  .passage-box { border:2px solid var(--ink); border-radius:10px; padding:10px 14px; margin:8px 0 10px; background:#fafafa; font-size:14pt; line-height:1.5; }
+  .bank { background:#fff8e1; border:2px dashed #c8a415; border-radius:10px; padding:8px 14px; margin:8px 0 10px; font-family:Verdana,sans-serif; font-size:12.5pt; }
+  .bank b { color:#7a5b00; }
+  .qline { font-weight:bold; margin:10px 0 8px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .chip.anschip { font-size:15pt; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); min-width:150px; }
+  @media print { .passage-box { background:#fff; } .bank { background:#fff; border-style:solid; } }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>📝 Sentence Cloze — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the short passage, then tap the correct answer to the question.">Circle the answer <input type="number" id="f-answer" min="0" max="16"></label>
+      <label data-tip="Read the sentence (and the helping words, if shown), then type the missing word.">Fill in the blank <input type="number" id="f-cloze" min="0" max="23"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Read the passage, then tap the correct answer or type the missing word (not case-sensitive). Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Sentence Cloze</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 📝⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  answer: WS.clamp(WS.toInt(WS.Q.get('answer'), 5), 0, 16),
+  cloze:  WS.clamp(WS.toInt(WS.Q.get('cloze'),  6), 0, 23) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* =====================================================================
+   Section 1: read & answer (chip-select, one answer) — pages 158-159, 162-163, 164-165.
+   Each pool entry pairs a SHORT passage (verbatim from the book) with ONE question about
+   it (also the book's own wording, kept standalone — the one workbook question that
+   circled two blanks in a single sentence, bookshop Q1, is split into two independent,
+   non-leaking questions here so every item asks exactly one thing).
+   ===================================================================== */
+const PASSAGES = {
+  bookshop: "Jenny and her mother are at a bookshop. They want to buy some storybooks. Jenny is at the Children's Section. She looks at all the books. She carefully picks three books to buy. Jenny and her mother go to the cashier to pay for the books. Jenny cannot wait to read her new books.",
+  aquarium: "Peter and his brother, Paul, like aquarium fishes. They love to go to the small aquarium near their home. They like to look at all the fishes in the tank. Peter's favourite is the bright orange goldfish. Paul prefers the fighting fish.",
+  library: "Sarah is very fond of reading. She goes to the library to borrow books home to read. She chooses her books from the children's section. Sarah is glad that she can borrow up to sixteen books each time.",
+};
+
+const ANSWER_QA = [
+  // bookshop (Jenny) — page 158-159 "Circle the correct answers"
+  { p:'bookshop', q:'Jenny and her ___ are at a bookshop.',            opts:['father','mother','aunt'],                    a:'mother' },
+  { p:'bookshop', q:'They are at a ___.',                              opts:['toy shop','market','bookshop'],              a:'bookshop' },
+  { p:'bookshop', q:'They want to buy some ___.',                      opts:['storybooks','stationery','toys'],            a:'storybooks' },
+  { p:'bookshop', q:'Jenny chooses her books from the ___.',           opts:["Adult's Section","Comics Section","Children's Section"], a:"Children's Section" },
+  { p:'bookshop', q:'Jenny buys ___ books from the bookshop.',         opts:['two','three','four'],                        a:'three' },
+  { p:'bookshop', q:"Jenny's mother pays for the books at the ___.",   opts:['cashier','machine','book corner'],           a:'cashier' },
+  // aquarium (Peter & Paul) — page 162-163 "Tick the correct answers"
+  { p:'aquarium', q:'Peter and Paul are ___.',                         opts:['friends','cousins','brothers'],              a:'brothers' },
+  { p:'aquarium', q:'They both like ___.',                             opts:['aquarium fishes','fighting fish','goldfish'],a:'aquarium fishes' },
+  { p:'aquarium', q:'The aquarium is near their ___.',                 opts:['school','home','park'],                      a:'home' },
+  { p:'aquarium', q:'Of all the fishes, Peter likes the ___ the most.',opts:['fighting fish','angelfish','goldfish'],      a:'goldfish' },
+  { p:'aquarium', q:'___ prefers the fighting fish.',                  opts:['Peter and Paul','Paul','Peter'],             a:'Paul' },
+  // library (Sarah) — page 164-165 "Underline the correct answers"
+  { p:'library', q:'Sarah likes to ___.',                              opts:['dance','draw','read'],                       a:'read' },
+  { p:'library', q:'She borrows books from the ___.',                  opts:['library','school','bookshop'],               a:'library' },
+  { p:'library', q:'Sarah chooses the books from the ___ section.',    opts:["children's","baby's","adult's"],             a:"children's" },
+  { p:'library', q:'She can borrow as many as ___ books each time.',   opts:['ten','sixteen','eighteen'],                  a:'sixteen' },
+  { p:'library', q:"Another word for 'glad' in the passage is ___.",   opts:['sad','angry','happy'],                       a:'happy' },
+];
+/* Distinct QUESTION per item: a shuffled pool indexed by the 1-based question number (like
+   nameTargets in beginning-sounds.html) guarantees no two items in the section repeat. */
+const answerOrder = shuffle(ANSWER_QA);
+function gAnswer(i){
+  const qa = answerOrder[(i-1) % answerOrder.length];
+  const opts = shuffle(qa.opts.map(o => ({ text:o, ok:(o === qa.a) })));
+  const chips = opts.map(o => '<button type="button" class="chip anschip" data-ok="' + (o.ok?1:0) + '">' + o.text + '</button>').join('');
+  const qline = qa.q.replace('___', '<span class="blankmark">______</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + '<div class="passage-box">'+PASSAGES[qa.p]+'</div>'
+    + '<div class="qline">'+qline+'</div>'
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div>'
+    + '</div>';
+}
+
+/* =====================================================================
+   Section 2: fill in the blank (typed input) — pages 160-161, 166-167.
+   Each pool entry is ONE cloze sentence plus either (a) the book's own "helping words"
+   bank for that passage, shown in full so the item is self-contained, or (b) for the one
+   exercise with no bank ("fill in with suitable words FROM THE PASSAGE"), the short source
+   passage itself. Two workbook blanks that share one flowing sentence (and would otherwise
+   be ambiguous read in isolation — Bryan's "shiny blue ___ / new ___" and the playground's
+   "three ___ go to the ___") stay combined as one two-input item.
+   ===================================================================== */
+const SK_PASSAGE = 'Samantha and Kelly are cousins. Samantha is older than Kelly. She takes good care of Kelly when she comes to visit. Sometimes, Samantha reads to Kelly. Sometimes, she takes her to the playground. Kelly likes to play on the swings. She also enjoys playing hide-and-seek with Samantha.';
+
+const CLOZE = [
+  // Aryan at the swimming pool — page 160, helping words: swimming pool, trunks, jumps, float, water, fun
+  { bank:['swimming pool','trunks','jumps','float','water','fun'], s:'Aryan and his parents are at the ___.', a:['swimming pool'] },
+  { bank:['swimming pool','trunks','jumps','float','water','fun'], s:'Aryan changes into his swimming ___.', a:['trunks'] },
+  { bank:['swimming pool','trunks','jumps','float','water','fun'], s:'Aryan ___ into the pool excitedly.', a:['jumps'] },
+  { bank:['swimming pool','trunks','jumps','float','water','fun'], s:'Aryan uses an inflatable ring ___.', a:['float'] },
+  { bank:['swimming pool','trunks','jumps','float','water','fun'], s:'Aryan splashes ___ at his parents.', a:['water'] },
+  { bank:['swimming pool','trunks','jumps','float','water','fun'], s:'Aryan and his parents have so much ___ at the pool.', a:['fun'] },
+
+  // Bryan's birthday bicycle — page 161, helping words: boy, bicycle, birthday, park, bicycle, present, friends
+  { bank:['boy','bicycle','birthday','park','bicycle','present','friends'], s:"It is Bryan's seventh ___.", a:['birthday'] },
+  { bank:['boy','bicycle','birthday','park','bicycle','present','friends'], s:'His parents bought him a birthday ___.', a:['present'] },
+  { bank:['boy','bicycle','birthday','park','bicycle','present','friends'], s:'It is a shiny blue ___, and Bryan loves his new ___.', a:['bicycle','bicycle'] },
+  { bank:['boy','bicycle','birthday','park','bicycle','present','friends'], s:'Bryan cycles to the ___ every evening.', a:['park'] },
+  { bank:['boy','bicycle','birthday','park','bicycle','present','friends'], s:'Bryan lets his ___ take turns to ride his bicycle too.', a:['friends'] },
+  { bank:['boy','bicycle','birthday','park','bicycle','present','friends'], s:'Bryan is a kind ___.', a:['boy'] },
+
+  // Ai-Ling, Tom and Sue at the playground — page 166, helping words: children, sandpit, seesaw, neighbours, slide, playground, fun
+  { bank:['children','sandpit','seesaw','neighbours','slide','playground','fun'], s:'Ai-Ling, Tom and Sue live in the same block of flats. They are ___.', a:['neighbours'] },
+  { bank:['children','sandpit','seesaw','neighbours','slide','playground','fun'], s:'Every afternoon, the three ___ go to the ___ to play.', a:['children|neighbours','playground'] },
+  { bank:['children','sandpit','seesaw','neighbours','slide','playground','fun'], s:'There are swings, seesaws, a slide and a small ___ at the playground.', a:['sandpit'] },
+  { bank:['children','sandpit','seesaw','neighbours','slide','playground','fun'], s:'Tom loves to slide down the ___.', a:['slide'] },
+  { bank:['children','sandpit','seesaw','neighbours','slide','playground','fun'], s:'Ai-Ling and Sue go up and down on the ___.', a:['seesaw'] },
+  { bank:['children','sandpit','seesaw','neighbours','slide','playground','fun'], s:'What great ___ the children have at the playground!', a:['fun'] },
+
+  // Samantha and Kelly are cousins — page 167, fill with suitable words FROM THE PASSAGE (no bank)
+  { passage:SK_PASSAGE, s:'The two girls are ___.', a:['cousins'] },
+  { passage:SK_PASSAGE, s:'Samantha is older than ___.', a:['Kelly'] },
+  { passage:SK_PASSAGE, s:'Samantha ___ stories to Kelly.', a:['reads'] },
+  { passage:SK_PASSAGE, s:'At the playground, Kelly likes to go on the ___.', a:['swings'] },
+  { passage:SK_PASSAGE, s:'Kelly and Samantha like to play ___.', a:['hide-and-seek|hide and seek'] },
+];
+/* embed one <input class="gradable"> per '___' in the sentence, in order, one data-answer each */
+function clozeHtml(sentence, answers){
+  const parts = sentence.split('___');
+  let out = parts[0];
+  for (let k = 0; k < answers.length; k++){
+    out += '<input class="ans gradable" data-answer="'+answers[k]+'" type="text" autocomplete="off">' + parts[k+1];
+  }
+  return out;
+}
+/* Distinct SENTENCE per item: a shuffled pool indexed by the 1-based question number
+   guarantees no two items in the section repeat (same pattern as Section 1). */
+const clozeOrder = shuffle(CLOZE);
+function gCloze(i){
+  const c = clozeOrder[(i-1) % clozeOrder.length];
+  const context = c.bank
+    ? '<div class="bank">Helping words: <b>'+c.bank.join(', ')+'</b></div>'
+    : '<div class="passage-box">'+c.passage+'</div>';
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + context
+    + '<div class="qline">'+clozeHtml(c.s, c.a)+'</div>'
+    + '</div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Read, then answer',
+  'Read the passage in the box. Then read the question and tap the correct answer.<br>'
+  + '<span class="ex"><b>Example:</b> Peter and Paul are ___. (friends, cousins, brothers) &rarr; <b>brothers</b></span>');
+html += WS.section('Circle the correct answer', cfg.answer, gAnswer);
+
+html += WS.teach('Fill in the blank',
+  'Read the sentence and the helping words. Pick the word that fits best, then type it in the blank.<br>'
+  + '<span class="ex"><b>Example:</b> Helping words: swimming pool, trunks. Aryan and his parents are at the ___. &rarr; <b>swimming pool</b></span>');
+html += WS.section('Fill in the blank', cfg.cloze, gCloze);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • sentence cloze';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();          // tappable chips (radio for data-mode="one")
+WS.wirePanel(cfg, ['answer','cloze'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

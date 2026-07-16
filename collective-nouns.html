@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 24 — Collective Nouns. Primary One English (VOCABULARY).
+     Built from beginning-sounds.html; see specs/collective-nouns.md.
+     Source: workbook pages 107-108 — "Tick the correct collective nouns"
+     (a table of 3 word options per sentence) and "Circle the correct
+     collective nouns" (word options in parentheses inside a sentence).
+     Both reproduced as chip-select-one fill-in-the-blank sections drawing
+     from one shared pool of 13 collective-noun facts, styled differently
+     to echo the book: `tick` = vertical checkbox list, `circle` = inline
+     "(word, word, word)" row.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collective Nouns — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .blankmark { display:inline-block; min-width:64px; text-align:center; border-bottom:3px solid var(--ink); font-weight:bold; letter-spacing:1px; }
+
+  /* "Tick" section: vertical checkbox-style list — mirrors the workbook's tick-table. */
+  .ticklist .chips { flex-direction:column; align-items:flex-start; gap:8px; }
+  .chip.tickchip { min-width:150px; justify-content:flex-start; padding:6px 16px 6px 8px; }
+  .chip.tickchip .box { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; margin-right:10px; border:2px solid var(--ink); border-radius:4px; background:#fff; font-size:13px; flex:none; }
+  .chip.tickchip.selected .box::after { content:'\2713'; }
+
+  /* "Circle" section: inline "(word, word, word)" row — mirrors the workbook's circled options. */
+  .circlerow { display:inline-flex; align-items:center; flex-wrap:wrap; gap:8px; vertical-align:middle; margin-left:6px; }
+  .circlerow .chips { gap:8px; }
+  .circlerow .paren { font-size:22pt; font-weight:bold; }
+  .circlerow .comma { font-weight:bold; margin-right:-2px; }
+  .chip.circlechip { border-radius:50px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🐑 Collective Nouns — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the sentence and tick the collective noun that fits.">Tick <input type="number" id="f-tick" min="0" max="13"></label>
+      <label data-tip="Read the sentence and circle the collective noun that fits.">Circle <input type="number" id="f-circle" min="0" max="13"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap the collective noun that fits the sentence. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Collective Nouns</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🐑⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  tick:   WS.clamp(WS.toInt(WS.Q.get('tick'),   5), 0, 13),
+  circle: WS.clamp(WS.toInt(WS.Q.get('circle'), 8), 0, 13) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- shared vocabulary pool: 13 collective-noun facts taken verbatim from the workbook
+   (pages 107-108). Each has the correct noun, a fill-in-the-blank sentence, and the exact
+   3-word option set the book prints for that sentence. Both sections below draw from this
+   same pool (independently shuffled), so the section's max (13) equals the pool size and
+   every question within a section is guaranteed distinct. ---- */
+const FACTS = [
+  { noun:'flock',   sentence:'Look at the ___ of sheep in the field!',     opts:['pack','bunch','flock'] },
+  { noun:'troop',   sentence:'I can see a ___ of monkeys over there.',      opts:['troop','flock','pack'] },
+  { noun:'litter',  sentence:'My cats gave birth to a ___ of kittens.',     opts:['school','litter','brood'] },
+  { noun:'pack',    sentence:'I hear the ___ of wolves howling.',           opts:['troop','flock','pack'] },
+  { noun:'flock',   sentence:'A ___ of birds flew past my window.',         opts:['flock','bunch','litter'] },
+  { noun:'choir',   sentence:'The ___ of singers sang beautifully.',        opts:['gang','choir','pack'] },
+  { noun:'pride',   sentence:'A ___ of lions lives in the den.',            opts:['pride','nest','litter'] },
+  { noun:'bunch',   sentence:'Who brought the ___ of bananas?',             opts:['branch','bunch','pack'] },
+  { noun:'fleet',   sentence:'A ___ of aeroplanes is in the hangar.',       opts:['flight','troop','fleet'] },
+  { noun:'class',   sentence:'The ___ of pupils is going for their break.', opts:['class','litter','bag'] },
+  { noun:'bouquet', sentence:'Jemma bought a ___ of flowers.',              opts:['bouquet','packet','pack'] },
+  { noun:'flight',  sentence:'We need to walk up a ___ of stairs.',         opts:['flight','group','flock'] },
+  { noun:'army',    sentence:'A/An ___ of soldiers is marching.',           opts:['gang','group','army'] },
+];
+
+/* ---- Section 1: tick the correct collective noun (chip-select one, vertical checkbox list) ---- */
+const tickOrder = shuffle(FACTS);
+function gTick(i){
+  const f = tickOrder[(i-1) % tickOrder.length];
+  const opts = shuffle(f.opts.slice());
+  const chips = opts.map(o =>
+    '<button type="button" class="chip tickchip" data-ok="'+(o===f.noun?1:0)+'"><span class="box"></span>'+o+'</button>'
+  ).join('');
+  const sentence = f.sentence.replace('___', '<span class="blankmark">______</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block ticklist" data-mode="one"><div class="chips">'+chips+'</div></div>'
+    + '</div>';
+}
+
+/* ---- Section 2: circle the correct collective noun (chip-select one, inline "(word, word, word)") ---- */
+const circleOrder = shuffle(FACTS);
+function gCircle(i){
+  const f = circleOrder[(i-1) % circleOrder.length];
+  const opts = shuffle(f.opts.slice());
+  const chips = opts.map((o, idx) =>
+    '<button type="button" class="chip circlechip" data-ok="'+(o===f.noun?1:0)+'">'+o+'</button>'
+    + (idx < opts.length - 1 ? '<span class="comma">,</span>' : '')
+  ).join('');
+  const sentence = f.sentence.replace('___', '<span class="blankmark">______</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block circlerow" data-mode="one"><span class="paren">(</span><div class="chips">'+chips+'</div><span class="paren">)</span></div>'
+    + '</div>';
+}
+
+/* ---- build the sheet: teach, then practise ---- */
+let html = '';
+html += WS.teach('Collective nouns',
+  'A <b>collective noun</b> is a word for a whole <b>group</b> of animals, people or things.<br>'
+  + '<span class="ex">a <b>flock</b> of sheep</span>'
+  + '<span class="ex">a <b>class</b> of pupils</span>');
+html += WS.section('Tick the correct collective nouns', cfg.tick, gTick);
+html += WS.section('Circle the correct collective nouns', cfg.circle, gCircle);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • collective nouns';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['tick','circle'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

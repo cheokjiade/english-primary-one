@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 28 — Antonyms. Primary One English (VOCABULARY, biggest unit — pages 120-128).
+     Built from homes.html (matching widget) + adjectives.html/prepositions.html (print-only
+     draw section). See specs/antonyms.md.
+     Sections: match word↔opposite (matching widget) · write the opposite (typed, helping words) ·
+     draw the opposite picture (PRINT-ONLY, parent-graded) · opposites in rhymes (typed) ·
+     circle the opposite (chip) · choose the opposite (chip).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antonyms — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:60px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:150px; }
+  .qrow { margin-top:6px; }
+  .bank { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .bankword { font-family:inherit; font-size:15pt; padding:4px 14px; border:2px solid var(--ink); border-radius:18px; background:#fff8e1; }
+  /* matching widget (see homes.html / AGENTS.md) */
+  .match { position:relative; display:flex; justify-content:space-between; gap:90px; max-width:560px; margin:6px 0 10px; }
+  .mcol { display:flex; flex-direction:column; gap:16px; z-index:2; }
+  .colhead { font-family:Verdana,sans-serif; font-size:10.5pt; font-weight:bold; color:#666; text-align:center; margin-bottom:4px; }
+  .mitem { font:inherit; font-size:15pt; padding:8px 14px; border:2.5px solid var(--ink); border-radius:12px; background:#fff; cursor:pointer; min-width:112px; text-align:center; }
+  .mitem.msel { background:#fde68a; }
+  .mitem.mk-correct { border-color:var(--right); background:#bbf7d0; }
+  .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
+  .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+  @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+  /* print-only (parent-graded) helpers */
+  .drawbox { height:96px; border:2px dashed #b0b6bd; border-radius:8px; margin:8px 0 4px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>↔️ Antonyms — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap a word on the left, then tap its opposite on the right.">Match <input type="number" id="f-match" min="0" max="10"></label>
+      <label data-tip="Write the opposite of the word in bold. Use the helping words.">Write <input type="number" id="f-write" min="0" max="6"></label>
+      <label data-tip="Print-only: the child draws the opposite picture and a grown-up marks it.">Draw ✍️ <input type="number" id="f-draw" min="0" max="6"></label>
+      <label data-tip="Read the rhyme. Write the opposite of the word in bold.">Rhyme <input type="number" id="f-rhyme" min="0" max="8"></label>
+      <label data-tip="Tap the word that means the opposite of the underlined word.">Circle <input type="number" id="f-circle" min="0" max="7"></label>
+      <label data-tip="Tap the word that completes the sentence with the opposite meaning.">Choose <input type="number" id="f-pick" min="0" max="6"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap a word, then tap its opposite; type the missing opposite; tap the correct opposite. One part is done on the printout (a grown-up marks it). Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Antonyms</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! ↔️⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  match:  WS.clamp(WS.toInt(WS.Q.get('match'),  6), 0, 10),
+  write:  WS.clamp(WS.toInt(WS.Q.get('write'),  3), 0, 6),
+  draw:   WS.clamp(WS.toInt(WS.Q.get('draw'),   3), 0, 6),
+  rhyme:  WS.clamp(WS.toInt(WS.Q.get('rhyme'),  4), 0, 8),
+  circle: WS.clamp(WS.toInt(WS.Q.get('circle'), 4), 0, 7),
+  pick:   WS.clamp(WS.toInt(WS.Q.get('pick'),   4), 0, 6) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: matching widget (reusable — see homes.html / AGENTS.md) ---- */
+/* PAIRS: {v: word, p: its opposite}. Pool of 14 — pages 120-121 ("hot/cold…" pictures + "bad/good…" words). */
+const PAIRS = [
+  {v:'hot',p:'cold'},{v:'clean',p:'dirty'},{v:'sharp',p:'blunt'},{v:'high',p:'low'},{v:'in',p:'out'},
+  {v:'bad',p:'good'},{v:'far',p:'near'},{v:'enemy',p:'friend'},{v:'hard',p:'soft'},{v:'ugly',p:'beautiful'},
+  {v:'neat',p:'messy'},{v:'fast',p:'slow'},{v:'noisy',p:'quiet'},{v:'young',p:'old'},
+];
+const MATCH_HEADS = ['Word', 'Opposite'];
+function buildMatch(count){
+  if (count <= 0) return '';
+  const chosen = shuffle(PAIRS).slice(0, count);
+  const rights = shuffle(chosen.map(c => c.p));
+  const leftHtml = chosen.map(c => '<button type="button" class="mitem mleft" data-answer="'+c.p+'">'+c.v+'</button>').join('');
+  const rightHtml = rights.map(p => '<button type="button" class="mitem mright" data-val="'+p+'">'+p+'</button>').join('');
+  return '<h2>Match each word to its opposite</h2>'
+    + '<div id="sec-match" class="match"><svg class="mlines"></svg>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[0]+'</div>'+leftHtml+'</div>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[1]+'</div>'+rightHtml+'</div></div>';
+}
+function lineColor(l){ return l.classList.contains('mk-correct') ? 'var(--right)' : l.classList.contains('mk-incorrect') ? 'var(--wrong)' : 'var(--accent)'; }
+function drawMatch(m){
+  const svg = m.querySelector('.mlines'); svg.innerHTML = '';
+  const box = m.getBoundingClientRect();
+  m.querySelectorAll('.mleft').forEach(l => {
+    if (!l.dataset.conn) return;
+    const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+    if (!r) return;
+    const lr = l.getBoundingClientRect(), rr = r.getBoundingClientRect();
+    const line = document.createElementNS(SVGNS, 'line');
+    line.setAttribute('x1', lr.right - box.left); line.setAttribute('y1', lr.top + lr.height/2 - box.top);
+    line.setAttribute('x2', rr.left - box.left);  line.setAttribute('y2', rr.top + rr.height/2 - box.top);
+    line.setAttribute('stroke', lineColor(l)); line.setAttribute('stroke-width', '4'); line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+  });
+}
+function wireMatch(){
+  document.querySelectorAll('.match').forEach(m => {
+    let sel = null;
+    m.querySelectorAll('.mleft').forEach(l => l.addEventListener('click', () => {
+      m.querySelectorAll('.mleft').forEach(x => x.classList.remove('msel')); sel = l; l.classList.add('msel');
+    }));
+    m.querySelectorAll('.mright').forEach(r => r.addEventListener('click', () => {
+      if (!sel) return;
+      sel.dataset.conn = r.dataset.val; sel.classList.remove('msel','mk-correct','mk-incorrect'); r.classList.remove('mk-correct','mk-incorrect');
+      sel = null; drawMatch(m);
+    }));
+  });
+  window.addEventListener('resize', () => document.querySelectorAll('.match').forEach(drawMatch));
+}
+function resetMatch(){
+  document.querySelectorAll('.match .mleft').forEach(l => { delete l.dataset.conn; l.classList.remove('msel','mk-correct','mk-incorrect'); });
+  document.querySelectorAll('.match .mright').forEach(r => r.classList.remove('mk-correct','mk-incorrect'));
+  document.querySelectorAll('.match .mlines').forEach(s => s.innerHTML = '');
+}
+function markMatch(){ let total = 0, right = 0;
+  document.querySelectorAll('#sec-match').forEach(m => {
+    m.querySelectorAll('.mleft').forEach(l => { total++;
+      const ok = l.dataset.conn === l.dataset.answer;
+      l.classList.remove('mk-correct','mk-incorrect'); l.classList.add(ok ? 'mk-correct' : 'mk-incorrect');
+      const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+      if (r) { r.classList.remove('mk-correct','mk-incorrect'); r.classList.add(ok ? 'mk-correct' : 'mk-incorrect'); }
+      if (ok) right++;
+    });
+    drawMatch(m);
+  });
+  return { total, right };
+}
+window.__wsAutoSolve = function(){
+  document.querySelectorAll('.match .mleft').forEach(l => { l.dataset.conn = l.dataset.answer; });
+  document.querySelectorAll('.match').forEach(drawMatch);
+};
+
+/* ---- shared pool for sections 2 & 3: "give the opposite" — pages 122-123 (helping words) ---- */
+const OPP6 = [
+  {noun:'tree',  bold:'tall',  opp:'short'},
+  {noun:'book',  bold:'thick', opp:'thin'},
+  {noun:'towel', bold:'clean', opp:'dirty'},
+  {noun:'face',  bold:'happy', opp:'sad'},
+  {noun:'ruler', bold:'short', opp:'long'},
+  {noun:'road',  bold:'wide',  opp:'narrow'},
+];
+const HELPING_WORDS = ['dirty','narrow','long','short','sad','thin'];
+
+/* ---- Section 2: write the opposite (typed input, default `text` kind) ---- */
+const writeOrder = shuffle(OPP6);
+function gWrite(i){
+  const t = writeOrder[(i-1) % writeOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> Write the opposite of the word in bold.'
+    + '<div class="qrow">A <b>'+t.bold+'</b> '+t.noun+' &rarr; a <span class="field"><input class="ans gradable" data-answer="'+t.opp+'" type="text" autocomplete="off"></span> '+t.noun+'.</div></div>';
+}
+
+/* ---- Section 3: draw the opposite picture (PRINT-ONLY, parent-graded — no gradable markup) ---- */
+const drawOrder = shuffle(OPP6);
+function gDraw(i){
+  const t = drawOrder[(i-1) % drawOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> The '+t.noun+' is <b>'+t.bold+'</b>. Draw a <b>'+t.opp+'</b> '+t.noun+'.'
+    + '<div class="drawbox"></div></div>';
+}
+
+/* ---- Section 4: opposites in rhymes (typed input; item 8 accepts young|new) — pages 124-125 ---- */
+const RHYME = [
+  {text:'Baa baa <b>black</b> sheep, have you any wool?',                 opp:'white'},
+  {text:'Jack and Jill went <b>up</b> the hill to fetch a pail of water.', opp:'down'},
+  {text:'Mary had a <b>little</b> lamb.',                                 opp:'big'},
+  {text:'Little Bo-Peep has <b>lost</b> her sheep.',                      opp:'found'},
+  {text:'Wee Willie Winkie runs <b>upstairs</b> in his nightgown.',       opp:'downstairs'},
+  {text:'Humpty Dumpty had a <b>great</b> fall.',                         opp:'small'},
+  {text:'Jack be nimble, Jack be <b>quick</b>.',                          opp:'slow'},
+  {text:'<b>Old</b> Mother Hubbard went to the cupboard.',                opp:'young|new'},
+];
+const rhymeOrder = shuffle(RHYME);
+function gRhyme(i){
+  const t = rhymeOrder[(i-1) % rhymeOrder.length];
+  return '<div class="item"><span class="label">'+i+'.</span> <i>'+t.text+'</i>'
+    + '<div class="qrow">Write the opposite of the bold word: <span class="field"><input class="ans gradable" data-answer="'+t.opp+'" type="text" autocomplete="off"></span></div></div>';
+}
+
+/* ---- Section 5: circle the opposite (chip-select one; <u> marks the target word) — page 126 ---- */
+const CIRCLE = [
+  {s:'Mary is always <u>sad</u>.',                     opts:['clever','late','happy'],    a:'happy'},
+  {s:'Today is a <u>sunny</u> day.',                   opts:['rainy','hot','clear'],       a:'rainy'},
+  {s:'The classroom is very <u>dark</u>.',             opts:['clean','bright','tidy'],     a:'bright'},
+  {s:'John is a <u>quiet</u> boy.',                    opts:['noisy','brave','shy'],       a:'noisy'},
+  {s:'I bought a very <u>cheap</u> pen from the shop.',opts:['clever','big','expensive'],  a:'expensive'},
+  {s:'My brother was <u>late</u>.',                    opts:['slow','early','quick'],      a:'early'},
+  {s:'The rat is <u>dead</u>!',                        opts:['alive','small','dirty'],     a:'alive'},
+];
+const circleOrder = shuffle(CIRCLE);
+function gCircle(i){
+  const t = circleOrder[(i-1) % circleOrder.length];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> '+t.s
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 6: choose the opposite (chip-select one; adapted from the picture-choice pages 127-128) ---- */
+const PICK = [
+  {s:'One present is big. The other present is ___.', opts:['small','heavy','clean'],   a:'small'},
+  {s:'The cup is clean. The bowl is ___.',             opts:['dirty','empty','weak'],    a:'dirty'},
+  {s:'Tom is strong. His brother is ___.',             opts:['weak','small','light'],    a:'weak'},
+  {s:'The box is full. The basket is ___.',            opts:['empty','dirty','big'],     a:'empty'},
+  {s:'The thick book is heavy. The thin book is ___.', opts:['light','strong','full'],   a:'light'},
+  {s:'She opens the window. She ___ the door.',        opts:['closes','opens','washes'], a:'closes'},
+];
+const pickOrder = shuffle(PICK);
+function gPick(i){
+  const t = pickOrder[(i-1) % pickOrder.length];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> '+sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Antonyms',
+  'An <b>antonym</b> is a word that means the <b>opposite</b> of another word.<br>'
+  + '<span class="ex"><b>hot</b> &harr; <b>cold</b></span><span class="ex"><b>fast</b> &harr; <b>slow</b></span><span class="ex"><b>big</b> &harr; <b>small</b></span>');
+html += buildMatch(cfg.match);
+
+html += WS.teach('Give the opposite',
+  'Write the opposite of the word in bold. Use the helping words.'
+  + '<div class="bank">' + HELPING_WORDS.map(w => '<span class="bankword">'+w+'</span>').join('') + '</div>');
+html += WS.section('Write the opposite', cfg.write, gWrite);
+
+html += WS.teach('On paper ✍️', 'Do this part on the printed sheet — a grown-up marks it.');
+html += WS.section('Draw the opposite picture', cfg.draw, gDraw);
+
+html += WS.teach('Opposites in rhymes', 'These lines are from nursery rhymes. Write the opposite of the word in bold.');
+html += WS.section('Opposites in rhymes', cfg.rhyme, gRhyme);
+
+html += WS.teach('Circle the opposite', 'Read the sentence. Circle the word that means the opposite of the <u>underlined</u> word.');
+html += WS.section('Circle the opposite', cfg.circle, gCircle);
+
+html += WS.teach('Choose the opposite', 'Read about the first thing. Choose the word that describes the opposite one.');
+html += WS.section('Choose the opposite', cfg.pick, gPick);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • antonyms';
+
+/* ---- wiring (shared engine) ---- */
+wireMatch();
+WS.wireChips();
+WS.wirePanel(cfg, ['match','write','draw','rhyme','circle','pick'], {
+  mark:  () => WS.mark({ extras: [markMatch] }),
+  clear: () => WS.clearAll(resetMatch),
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Graphic Stimulus. Primary One English (COMPREHENSION, unit 37).
+     Built from beginning-sounds.html (the reference template).
+     Source: workbook pp.152-157 — "Reserved Seating" notice (Yes/No),
+     "Blue Cafe's Special Promotion" poster (tick the answer), a playground
+     scene + a rainy-day scene (True/False), a hawker-centre scene (circle
+     the word). Notices/posters are reproduced as styled HTML boxes; photo
+     scenes are reproduced as short written "look and read" descriptions
+     (see AGENTS.md's ADAPTATION guidance). Each of the 3 sections rotates
+     TWO OR THREE stimuli — the book's original plus 1-2 same-spirit extras
+     (a "Library Rules" notice, a "School Fun Fair" poster) — so questions
+     stay distinct across a section's full count. All chip-select-one;
+     no typed inputs, no matching widget, no drag-order, no print-only work.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graphic Stimulus — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* graphic-stimulus-specific components */
+  .stimref { display:inline-block; font-family:Verdana,sans-serif; font-size:9.5pt; font-weight:bold;
+             color:var(--accent); border:1px solid var(--accent); border-radius:20px; padding:2px 10px; margin-bottom:6px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .chip.yn { min-width:64px; }
+  .chip.pchip { font-size:15pt; }
+
+  /* notice board (Reserved Seating / Library Rules) */
+  .notice-box { border:3px solid var(--ink); border-radius:10px; padding:12px 16px 16px; margin:14px auto; max-width:560px; background:#fff; }
+  .notice-title { text-align:center; font-weight:bold; font-size:16pt; border-bottom:2px solid var(--ink); padding-bottom:8px; margin-bottom:10px; }
+  .notice-pictos { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
+  .picto { border:2px solid #888; border-radius:8px; padding:8px 10px; text-align:center; width:98px; background:#f9fafb; }
+  .picto-icon { width:34px; height:34px; }
+  .picto span { display:block; font-family:Verdana,sans-serif; font-size:9pt; margin-top:4px; line-height:1.25; }
+  .rules { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+  .rules li { display:flex; align-items:center; gap:8px; font-size:14pt; }
+  .rule-icon { width:26px; height:26px; flex:none; }
+
+  /* poster (Blue Cafe / Fun Fair) */
+  .poster-box { border:3px dashed var(--accent); border-radius:14px; padding:14px 18px 16px; margin:14px auto; max-width:560px; background:#fbfdff; }
+  .poster-title { text-align:center; font-weight:bold; font-size:15pt; margin-bottom:2px; }
+  .poster-banner { text-align:center; font-family:Verdana,sans-serif; font-size:10.5pt; font-weight:bold; color:var(--accent); margin-bottom:6px; }
+  .poster-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-top:1px dashed #cbd0d6; padding:8px 4px; }
+  .poster-icon { width:30px; height:30px; flex:none; }
+  .pname { font-weight:bold; }
+  .poffer { margin-left:auto; text-align:right; }
+  .poster-hours { text-align:center; font-family:Verdana,sans-serif; font-size:10pt; margin-top:8px; border-top:2px solid var(--ink); padding-top:8px; }
+
+  /* picture scene (playground / rainy day / hawker centre) */
+  .scene-box { border:2px solid #888; border-radius:10px; padding:12px 16px; margin:14px auto; max-width:600px; background:#f9fafb; }
+  .scene-title { font-weight:bold; margin-bottom:6px; }
+  .scene-text { font-size:15pt; line-height:1.55; }
+
+  @media print {
+    .notice-box, .poster-box, .scene-box, .picto { background:#fff; }
+    .poster-box { border-style:solid; }
+  }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🪧 Graphic Stimulus — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the notice (Reserved Seating / Library Rules) and tap Yes or No.">Notice <input type="number" id="f-notice" min="0" max="12"></label>
+      <label data-tip="Read the poster (Blue Cafe / Fun Fair) and tap the correct answer.">Poster <input type="number" id="f-poster" min="0" max="12"></label>
+      <label data-tip="Look at the picture scene and tap True/False, or tap the correct word.">Scene <input type="number" id="f-scene" min="0" max="16"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Read the notice, poster or picture scene above each set of questions, then tap your answer. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Graphic Stimulus</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🪧⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  notice: WS.clamp(WS.toInt(WS.Q.get('notice'), 4), 0, 12),
+  poster: WS.clamp(WS.toInt(WS.Q.get('poster'), 4), 0, 12),
+  scene:  WS.clamp(WS.toInt(WS.Q.get('scene'),  5), 0, 16) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- picture icons (Twemoji, bundled offline under assets/twemoji/) ---- */
+const TW = cp => 'assets/twemoji/' + cp + '.svg';
+const icon = (cp, cls) => '<img class="' + cls + '" src="' + TW(cp) + '" alt="">';
+
+/* =====================================================================
+   Section 1: NOTICES — "Reserved Seating" (book) + "Library Rules" (extra)
+   Look at the picture. Write 'Yes' or 'No'. (chip-select one, Yes/No)
+   ===================================================================== */
+function picto(cp, label){ return '<div class="picto">' + icon(cp,'picto-icon') + '<span>' + label + '</span></div>'; }
+function rule(cp, text){ return '<li>' + icon(cp,'rule-icon') + ' ' + text + '</li>'; }
+
+const NOTICES = [
+  { id:'reserved', label:'Reserved Seating',
+    html: '<div class="notice-box"><div class="notice-title">Reserved Seating</div><div class="notice-pictos">'
+        + picto('1fa7c','On crutches') + picto('1f930','Pregnant woman')
+        + picto('1f476','Carrying a baby') + picto('1fa79','Injured leg')
+        + '</div></div>' },
+  { id:'library', label:'Library Rules',
+    html: '<div class="notice-box"><div class="notice-title">Library Rules</div><ul class="rules">'
+        + rule('1f92b','Keep your voice down.') + rule('1f6ab','No food or drinks.')
+        + rule('1f4d5','Return books on time.') + rule('1f6ab','No running.')
+        + '</ul></div>' },
+];
+const NOTICE_BY_ID = {}; NOTICES.forEach(n => NOTICE_BY_ID[n.id] = n);
+
+const NOTICE_Q = [
+  // Reserved Seating — verbatim from the workbook page
+  { n:'reserved', q:'This notice is likely to be seen on a train or a bus.', a:true },
+  { n:'reserved', q:"Seats that are reserved are 'saved' or 'set aside'.", a:true },
+  { n:'reserved', q:'The notice shows that the seats are reserved for four groups of people.', a:true },
+  { n:'reserved', q:'Someone with a baby can take the seat.', a:true },
+  { n:'reserved', q:'The seats are also reserved for school boys.', a:false },
+  { n:'reserved', q:'An old lady cannot stand for long. She can take the seat.', a:true },
+  // Library Rules — same-spirit extra
+  { n:'library', q:'This notice is likely to be seen in a library.', a:true },
+  { n:'library', q:"'Keep your voice down' means you should talk loudly.", a:false },
+  { n:'library', q:'The notice shows four rules.', a:true },
+  { n:'library', q:'Books must be returned on time.', a:true },
+  { n:'library', q:'You are allowed to run and play catching games inside.', a:false },
+  { n:'library', q:'Bringing food and drinks into the library breaks the rules.', a:true },
+];
+const noticeOrder = shuffle(NOTICE_Q);
+function gNotice(i){
+  const t = noticeOrder[(i-1) % noticeOrder.length];
+  const src = NOTICE_BY_ID[t.n];
+  const opts = shuffle([{v:'Yes', ok:t.a===true}, {v:'No', ok:t.a===false}]);
+  const chips = opts.map(o => '<button type="button" class="chip yn" data-ok="'+(o.ok?1:0)+'">'+o.v+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> <span class="stimref">🪧 '+src.label+'</span><br>'
+    + t.q
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* =====================================================================
+   Section 2: POSTERS — "Blue Cafe's Special Promotion" (book) +
+   "Greenwood School's Fun Fair" (extra). Look at the poster; tick the
+   correct answer. (chip-select one, 3 options)
+   ===================================================================== */
+function posterRow(cp, name, offer){ return '<div class="poster-row">'+icon(cp,'poster-icon')+'<span class="pname">'+name+'</span><span class="poffer">'+offer+'</span></div>'; }
+function posterBox(title, banner, rows, hours){
+  return '<div class="poster-box"><div class="poster-title">'+title+'</div><div class="poster-banner">'+banner+'</div>'
+    + rows.join('') + '<div class="poster-hours">'+hours+'</div></div>';
+}
+
+const POSTERS = [
+  { id:'cafe', label:"Blue Cafe's Special Promotion",
+    html: posterBox("Blue Cafe's Special Promotion", 'On Mondays only!', [
+      posterRow('1f964','Lemonade','Buy one get one free'),
+      posterRow('1f354','Cheeseburger','One for $2'),
+      posterRow('1f35f','Fries','One box for $1'),
+    ], 'Opening hours: 10:00 am to 8:00 pm') },
+  { id:'fair', label:"Greenwood School's Fun Fair",
+    html: posterBox("Greenwood School's Fun Fair", 'This Saturday only!', [
+      posterRow('1f3ab','Game Booth','2 tickets to play'),
+      posterRow('1f37f','Popcorn','One box for $1'),
+      posterRow('1f3a8','Face Painting','$3 each'),
+    ], 'Opening hours: 9:00 am to 5:00 pm') },
+];
+const POSTER_BY_ID = {}; POSTERS.forEach(p => POSTER_BY_ID[p.id] = p);
+
+const POSTER_Q = [
+  // Blue Cafe — verbatim from the workbook page
+  { p:'cafe', s:'The name of the cafe is ___.', opts:['Special','Blue Cafe','Blue Wave'], a:'Blue Cafe' },
+  { p:'cafe', s:'The promotion is only valid on ___.', opts:['Mondays','Tuesdays','Wednesdays'], a:'Mondays' },
+  { p:'cafe', s:'I will get a free ___ if I buy one.', opts:['burger','box of fries','lemonade'], a:'lemonade' },
+  { p:'cafe', s:'A box of fries costs ___.', opts:['$1','$2','$5'], a:'$1' },
+  { p:'cafe', s:'The ___ costs $2 each.', opts:['fries','cheeseburger','lemonade'], a:'cheeseburger' },
+  { p:'cafe', s:'The cafe opens at ___.', opts:['8:00 am','10:00 am','10:00 pm'], a:'10:00 am' },
+  // Fun Fair — same-spirit extra, parallel structure
+  { p:'fair', s:'The fun fair is held at ___.', opts:['Greenwood School','Blue Cafe','the library'], a:'Greenwood School' },
+  { p:'fair', s:'The fun fair is held on ___.', opts:['Saturday','Sunday','Monday'], a:'Saturday' },
+  { p:'fair', s:'I need ___ to play a game.', opts:['1 ticket','2 tickets','3 tickets'], a:'2 tickets' },
+  { p:'fair', s:'A box of popcorn costs ___.', opts:['$1','$2','$3'], a:'$1' },
+  { p:'fair', s:'___ costs $3 each.', opts:['Popcorn','Face painting','The game booth'], a:'Face painting' },
+  { p:'fair', s:'The fun fair opens at ___.', opts:['8:00 am','9:00 am','9:00 pm'], a:'9:00 am' },
+];
+const posterOrder = shuffle(POSTER_Q);
+function gPoster(i){
+  const t = posterOrder[(i-1) % posterOrder.length];
+  const src = POSTER_BY_ID[t.p];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip pchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  const sentence = t.s.replace('___', '<span class="blankmark">___</span>');
+  return '<div class="item"><span class="label">'+i+'.</span> <span class="stimref">📋 '+src.label+'</span><br>'
+    + sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* =====================================================================
+   Section 3: PICTURE SCENES — playground + rainy day (True/False) and
+   hawker centre (circle the word). Photo scenes reproduced as a short
+   written description per AGENTS.md's ADAPTATION guidance, not as images.
+   ===================================================================== */
+const SCENES = [
+  { id:'playground', label:'At the Playground',
+    text: 'It is a sunny afternoon at the playground. A boy is climbing the ladder to go down the slide. '
+        + 'Two girls are laughing together on the seesaw nearby. The swings are empty, and the sandpit in '
+        + 'the corner is full of old leaves and litter.' },
+  { id:'rainy', label:'A Rainy Day',
+    text: 'Dark clouds fill the sky and rain is pouring down. Two children in raincoats are walking '
+        + 'together under the wet trees. A man dashes across the street without an umbrella. A woman '
+        + 'holds an umbrella and carries a bag as she walks. A boy stands and waits at the bus stop shelter.' },
+  { id:'hawker', label:'At the Hawker Centre',
+    text: 'The hawker centre is crowded and noisy at lunchtime. Many stalls sell rice, noodles and other '
+        + 'food. A long queue of customers waits patiently to order at one stall. Two friends are already '
+        + 'eating their lunch at a round table. Behind the counters, the hawkers are busy cooking and serving food.' },
+];
+const SCENE_BY_ID = {}; SCENES.forEach(s => SCENE_BY_ID[s.id] = s);
+function sceneBox(s){ return '<div class="scene-box"><div class="scene-title">🖼️ '+s.label+'</div><div class="scene-text">'+s.text+'</div></div>'; }
+
+const SCENE_Q = [
+  // At the Playground — True/False (book, my written scene)
+  { sc:'playground', kind:'tf', q:'This is a playground.', a:true },
+  { sc:'playground', kind:'tf', q:'A few children are at the playground.', a:true },
+  { sc:'playground', kind:'tf', q:'The boy is playing alone.', a:false },
+  { sc:'playground', kind:'tf', q:'It is nighttime.', a:false },
+  { sc:'playground', kind:'tf', q:'The sandpit is clean.', a:false },
+  { sc:'playground', kind:'tf', q:'The girls are playing on the swings.', a:false },
+  // A Rainy Day — True/False (book, my written scene)
+  { sc:'rainy', kind:'tf', q:'It is a sunny day.', a:false },
+  { sc:'rainy', kind:'tf', q:'Everyone has umbrellas and raincoats to keep themselves dry.', a:false },
+  { sc:'rainy', kind:'tf', q:'A boy is waiting at the bus stop.', a:true },
+  { sc:'rainy', kind:'tf', q:'A man is running in the rain.', a:true },
+  { sc:'rainy', kind:'tf', q:'The two children are wearing raincoats.', a:true },
+  // At the Hawker Centre — circle the correct word (book, my written scene)
+  { sc:'hawker', kind:'pick', s:'This is a ___.', opts:['hawker centre','hospital'], a:'hawker centre' },
+  { sc:'hawker', kind:'pick', s:'There are many ___ in this place.', opts:['stalls','rooms'], a:'stalls' },
+  { sc:'hawker', kind:'pick', s:'We can buy ___ here.', opts:['food','pets'], a:'food' },
+  { sc:'hawker', kind:'pick', s:'The ___ are very busy.', opts:['customers','hawkers'], a:'hawkers' },
+  { sc:'hawker', kind:'pick', s:'Some ___ have to queue up to buy their food.', opts:['customers','owners'], a:'customers' },
+];
+const sceneOrder = shuffle(SCENE_Q);
+function gScene(i){
+  const t = sceneOrder[(i-1) % sceneOrder.length];
+  const src = SCENE_BY_ID[t.sc];
+  let body, chips;
+  if (t.kind === 'tf'){
+    const opts = shuffle([{v:'True', ok:t.a===true}, {v:'False', ok:t.a===false}]);
+    chips = opts.map(o => '<button type="button" class="chip yn" data-ok="'+(o.ok?1:0)+'">'+o.v+'</button>').join('');
+    body = t.q;
+  } else {
+    const opts = shuffle(t.opts.slice());
+    chips = opts.map(o => '<button type="button" class="chip pchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+    body = t.s.replace('___', '<span class="blankmark">___</span>');
+  }
+  return '<div class="item"><span class="label">'+i+'.</span> <span class="stimref">🖼️ '+src.label+'</span><br>'
+    + body
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- build the sheet: teach (stimulus), then practise (questions) ---- */
+let html = '';
+html += WS.teach('Notices',
+  'A <b>notice</b> tells people the rules or information for a place. Read each notice below. Then tap <b>Yes</b> or <b>No</b> for each sentence.'
+  + NOTICES.map(n => n.html).join(''));
+html += WS.section('Read the notice', cfg.notice, gNotice);
+
+html += WS.teach('Posters',
+  'A <b>poster</b> tells people about an event or a special offer. Read each poster below. Then tap the correct answer to finish each sentence.'
+  + POSTERS.map(p => p.html).join(''));
+html += WS.section('Read the poster', cfg.poster, gPoster);
+
+html += WS.teach('Picture scenes',
+  'Look at each picture scene below. Then tap <b>True</b> or <b>False</b>, or tap the correct word to finish the sentence.'
+  + SCENES.map(sceneBox).join(''));
+html += WS.section('Look and answer', cfg.scene, gScene);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • graphic stimulus';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();          // tappable chips (radio for data-mode="one")
+WS.wirePanel(cfg, ['notice','poster','scene'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

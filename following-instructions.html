@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 35 — Following Instructions. Primary One English.
+     Built from prepositions.html; see specs/following-instructions.md.
+     Sections: read carefully and answer (chip) ·
+     read the sentences and follow the instructions (PRINT-ONLY, parent-graded — see AGENTS.md).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Following Instructions — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  .chip.vchip { font-size:16pt; min-width:64px; }
+  .instrq { font-style:italic; display:block; margin:2px 0 6px; }
+  .scene  { font-style:italic; display:block; margin:2px 0 6px; }
+  .instrlist { margin:2px 0 10px 26px; padding:0; }
+  .instrlist li { margin-bottom:5px; }
+  /* print-only (parent-graded) helpers */
+  .drawbox { height:180px; border:2px dashed #b0b6bd; border-radius:8px; margin:8px 0 4px; }
+  .pbadge { font-family:Verdana,sans-serif; font-size:9pt; font-weight:bold; color:#8a5a00; background:#fff3cd; border:1px solid #ffe08a; border-radius:10px; padding:1px 8px; margin-left:6px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>📋 Following Instructions — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the sentences, then tap the correct answer to show you followed the instruction.">Check <input type="number" id="f-check" min="0" max="8"></label>
+      <label data-tip="Print-only: read the sentences and draw or colour on the printout; a grown-up marks it.">Draw ✍️ <input type="number" id="f-draw" min="0" max="6"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Read each sentence carefully, then tap the correct answer. The last section is done on the printout (a grown-up marks it). Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Following Instructions</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 📋⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  check: WS.clamp(WS.toInt(WS.Q.get('check'), 5), 0, 8),
+  draw:  WS.clamp(WS.toInt(WS.Q.get('draw'),  3), 0, 6) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: read carefully and answer (chip-select one, comprehension on the instructions) ---- */
+/* Each item restates the instruction sentence(s) it is about, so the question is self-contained —
+   it does not depend on the child having seen the (separate, print-only) draw section. Drawn from the
+   same six scenarios as the draw pool below. */
+const CHECK = [
+  {given:'The father is reading a magazine. Colour the magazine blue.',
+   q:'What colour must you colour the magazine?', opts:['blue','red','yellow'], a:'blue'},
+  {given:'The boy is digging in the sand with a spade. Draw a spade for him.',
+   q:'WHO gets the spade?', opts:['the boy who is digging','the father who is reading','the girl standing by'], a:'the boy who is digging'},
+  {given:"It is John's birthday. He is seven years old today. Draw the correct number of candles on the cake.",
+   q:'How many candles must you draw?', opts:['5','7','8'], a:'7'},
+  {given:'Draw a pair of spectacles for the boy standing beside John.',
+   q:'WHO gets the pair of spectacles?', opts:['the boy beside John','John','the girl'], a:'the boy beside John'},
+  {given:'The Christmas tree is still bare. Draw eight baubles on the tree.',
+   q:'How many baubles must you draw?', opts:['6','8','10'], a:'8'},
+  {given:"Mei Ling's apple tree has no fruit yet. Draw six apples on the tree and colour them red.",
+   q:'What colour must you colour the apples?', opts:['red','yellow','purple'], a:'red'},
+  {given:"Ali's fish bowl is empty. Draw five fish in the bowl and colour them orange.",
+   q:'How many fish must you draw in the bowl?', opts:['3','5','7'], a:'5'},
+  {given:"On Farmer Tan's farm, draw four hens near the barn and two ducks by the pond.",
+   q:'How many ducks must you draw by the pond?', opts:['1','2','3'], a:'2'},
+];
+const checkOrder = shuffle(CHECK);
+function gCheck(i){
+  const t = checkOrder[(i-1) % checkOrder.length];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> <span class="instrq">“'+t.given+'”</span> <b>'+t.q+'</b>'
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: read the sentences and follow the instructions (PRINT-ONLY, parent-graded) ---- */
+/* Faithful to the workbook: a short scene, then numbered "Draw…"/"Colour…" instructions, then one
+   big box to draw the additions in. First two scenarios are verbatim from the workbook (pages 147–148);
+   the rest are original scenarios in the same shape. No gradable markup -> WS.mark() ignores it. */
+const SCENES = [
+  {desc:'The family is at the beach. The father is reading a magazine. The boy is digging in the sand with a spade. The girl is standing beside her mother.',
+   instr:['The father is reading a magazine. Colour the magazine blue.',
+          'The boy is digging in the sand with a spade. Draw a spade for him.',
+          'Draw a pair of sunglasses for the girl.',
+          'Draw a hat for the mother.']},
+  {desc:"It is John's birthday. He is seven years old today.",
+   instr:['Draw the correct number of candles on the birthday cake.',
+          'Draw party hats for all the children.',
+          'Draw a pair of spectacles for the boy standing beside John.',
+          'Colour the clothes of the girl with short hair.']},
+  {desc:'It is Christmas time. The Christmas tree in the corner of the room is still bare.',
+   instr:['Draw eight baubles on the Christmas tree.',
+          'Draw a star on the top of the tree.',
+          'Draw three presents under the tree.',
+          'Colour the tree green.']},
+  {desc:'Mei Ling is standing beside the apple tree in the garden. The tree has no fruit yet.',
+   instr:['Draw six apples on the tree.',
+          'Draw two birds on the branches.',
+          'Colour the apples red.',
+          'Draw a sun in the sky.']},
+  {desc:"Ali has a new fish bowl on the table, but it is empty.",
+   instr:['Draw five fish in the bowl.',
+          'Draw two water plants in the bowl.',
+          'Colour the fish orange.',
+          'Draw a snail beside the bowl.']},
+  {desc:"It is morning on Farmer Tan's farm. The farmyard is empty.",
+   instr:['Draw four hens near the barn.',
+          'Draw two ducks by the pond.',
+          'Colour the barn red.',
+          'Draw a fence around the farmyard.']},
+];
+const sceneOrder = shuffle(SCENES);
+function gDraw(i){
+  const t = sceneOrder[(i-1) % sceneOrder.length];
+  const steps = t.instr.map(s => '<li>'+s+'</li>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> <span class="scene">'+t.desc+'</span>'
+    + '<ol class="instrlist">'+steps+'</ol>'
+    + '<div class="drawbox"></div></div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Following instructions',
+  'An instruction tells you exactly what to do. Read it <b>twice</b> before you start — look for a '
+  + '<b>number</b> (how many?), a <b>colour</b>, and <b>who</b> or <b>what</b> it is for.<br>'
+  + '<b>"He is seven years old. Draw the correct number of candles."</b> → count carefully and draw <b>7</b> candles — not 5, not 8!');
+html += WS.section('Read carefully and answer', cfg.check, gCheck);
+
+html += WS.teach('On paper ✍️', 'Now read the sentences on the printed sheet and follow the instructions — draw or colour on the picture. A grown-up marks this part.');
+html += WS.section('Read the sentences and follow the instructions', cfg.draw, gDraw);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • following instructions';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['check','draw'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

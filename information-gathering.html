@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 32 — Information Gathering. Primary One English.
+     Built from beginning-sounds.html; see specs/information-gathering.md.
+     Source: workbook pp.138-140 — "Read the sentences. Find out the name
+     of each child/clown/dog." The book labels three pictures from clue
+     sentences; since there is no picture here, each scenario's clue set is
+     told in TEXT and the child taps the name that answers a question about
+     it (chip-select-one) — the book's three scenarios (girls, clowns, dogs)
+     plus new ones in the same spirit (queues, colours, held objects, size).
+     Two sections: who (people scenarios) · pets (animal scenarios).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Information Gathering — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* information-gathering-specific components */
+  .clue { background:#f3f4f6; border:2px solid var(--ink); border-radius:12px; padding:10px 16px 2px; margin:8px 0 12px; }
+  .clue p { margin:0 0 8px; font-size:15.5pt; line-height:1.5; }
+  .qtext { font-weight:bold; margin:0 0 10px; }
+  .chip.namechip { font-size:16pt; min-width:86px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🕵️ Information Gathering — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the clues about three people, then tap the name that answers the question.">Who is it? <input type="number" id="f-who" min="0" max="5"></label>
+      <label data-tip="Read the clues about three pets, then tap the name that answers the question.">Whose pet? <input type="number" id="f-pets" min="0" max="4"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Read every clue carefully — some answers come straight from one clue, others by working out who is left. Tap a name to choose it. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Information Gathering</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🕵️⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  who:  WS.clamp(WS.toInt(WS.Q.get('who'),  3), 0, 5),
+  pets: WS.clamp(WS.toInt(WS.Q.get('pets'), 2), 0, 4) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- Section 1: people scenarios (chip-select, one answer) ----
+   Each scenario is a self-contained 3-person clue set (own intro sentence naming all three,
+   so it stands alone with no picture) plus ONE question with a single correct name.
+   The first two scenarios are the workbook's own (girls / clowns, pp.138-139); the rest are
+   new scenarios in the same spirit — a queue, coloured caps, held party items. */
+const WHO = [
+  { names: ['Mary','Jane','Sue'],
+    clue: [ 'There are three girls: <b>Mary</b>, <b>Jane</b> and <b>Sue</b>.',
+            'Mary has long, straight hair.',
+            'Jane stands between Mary and Sue.' ],
+    q: 'Who stands in the middle?', a: 'Jane' },
+  { names: ['Barry','Bobo','Bobby'],
+    clue: [ 'There are three clowns: <b>Barry</b>, <b>Bobo</b> and <b>Bobby</b>.',
+            'Barry is a happy clown with a wide smile.',
+            'Bobo is holding balloons for the children.' ],
+    q: 'Which clown does not have a wide smile and is not holding balloons?', a: 'Bobby' },
+  { names: ['Amy','Ben','Cara'],
+    clue: [ 'Amy, Ben and Cara are standing in a queue at the tuck shop.',
+            'Amy is first in the queue.',
+            'Cara is right behind Ben.' ],
+    q: 'Who is last in the queue?', a: 'Cara' },
+  { names: ['Dan','Ethan','Farah'],
+    clue: [ 'Dan, Ethan and Farah are triplets. Each of them wears a different colour cap: red, yellow or green.',
+            "Dan's cap is yellow.",
+            "Ethan's cap is red." ],
+    q: 'Whose cap is green?', a: 'Farah' },
+  { names: ['Grace','Huda','Ivy'],
+    clue: [ 'Grace, Huda and Ivy are at a party. Each girl is holding one thing: a balloon, a gift box or a cupcake.',
+            'Grace is holding a gift box.',
+            'Huda is not holding a cupcake.' ],
+    q: 'Who is holding the balloon?', a: 'Huda' },
+];
+const whoOrder = shuffle(WHO);
+function gWho(i){
+  const s = whoOrder[(i-1) % whoOrder.length];
+  const chips = shuffle(s.names).map(n =>
+    '<button type="button" class="chip namechip" data-ok="'+(n===s.a?1:0)+'">'+n+'</button>').join('');
+  const clueHtml = s.clue.map(line => '<p>'+line+'</p>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> <b>Case '+i+':</b> read the clues, then tap the name that answers the question.'
+    + '<div class="clue">'+clueHtml+'</div>'
+    + '<div class="qtext">'+s.q+'</div>'
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div>'
+    + '</div>';
+}
+
+/* ---- Section 2: pet scenarios (chip-select, one answer) ----
+   Same pattern for animals. First scenario is the workbook's dogs (p.140); the rest are new
+   — cats' coats, rabbits compared by size, ducks' ribbons — same simple 3-entity chaining. */
+const PETS = [
+  { names: ['Snowy','Brownie','Patch'],
+    clue: [ 'Mr Wong has three dogs: <b>Snowy</b>, <b>Brownie</b> and <b>Patch</b>.',
+            'Patch has a brown patch over one eye.',
+            "Snowy has long, soft fur — you can't even see its eyes!" ],
+    q: 'Which dog does not have a patch on its eye and does not have long fur over its eyes?', a: 'Brownie' },
+  { names: ['Milo','Nala','Oreo'],
+    clue: [ 'Aunt Lin has three cats: Milo, Nala and Oreo. Each cat has a different coat: black, orange or stripy.',
+            "Milo's coat is black.",
+            "Oreo's coat is stripy." ],
+    q: 'Which cat has an orange coat?', a: 'Nala' },
+  { names: ['Coco','Bella','Daisy'],
+    clue: [ 'Farmer Ali has three rabbits: Coco, Bella and Daisy.',
+            'Coco is bigger than Bella.',
+            'Bella is bigger than Daisy.' ],
+    q: 'Which rabbit is the smallest?', a: 'Daisy' },
+  { names: ['Quack','Waddle','Puddle'],
+    clue: [ 'Three ducks live in the pond: Quack, Waddle and Puddle. Each duck wears a different colour ribbon: red, yellow or blue.',
+            "Quack's ribbon is red.",
+            "Waddle's ribbon is not yellow." ],
+    q: "Whose ribbon is blue?", a: 'Waddle' },
+];
+const petOrder = shuffle(PETS);
+function gPets(i){
+  const s = petOrder[(i-1) % petOrder.length];
+  const chips = shuffle(s.names).map(n =>
+    '<button type="button" class="chip namechip" data-ok="'+(n===s.a?1:0)+'">'+n+'</button>').join('');
+  const clueHtml = s.clue.map(line => '<p>'+line+'</p>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> <b>Case '+i+':</b> read the clues, then tap the name that answers the question.'
+    + '<div class="clue">'+clueHtml+'</div>'
+    + '<div class="qtext">'+s.q+'</div>'
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div>'
+    + '</div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Be an information detective! 🕵️',
+  'Read every clue carefully. Some clues tell you exactly who someone is. Others you work out by ' +
+  '<b>elimination</b> — crossing off the names you already know, so only one name is left.<br>' +
+  '<span class="ex"><b>Try it:</b> Zara, Yusuf and Wen ran a race. Zara finished first. Yusuf finished right after Zara. ' +
+  'Who finished last? &rarr; <b>Wen</b> (Zara is 1st, Yusuf is 2nd, so Wen must be 3rd!)</span>');
+html += WS.section('Who is it?', cfg.who, gWho);
+
+html += WS.teach('Now try it with pets! 🐾',
+  'The same trick works for animals. Read every clue about the pets below — whatever is left over must belong to the one name nobody has used yet.');
+html += WS.section('Whose pet is it?', cfg.pets, gPets);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • information gathering';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();          // tappable chips (radio for data-mode="one")
+WS.wirePanel(cfg, ['who','pets'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

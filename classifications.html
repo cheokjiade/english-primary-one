@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 25 — Classifications. Primary One English (VOCABULARY).
+     Built from homes.html (matching widget) + the print-only puzzle pattern from
+     occupations.html/people.html/places.html; see specs/classifications.md.
+     Sections: match each word set to its classification (matching widget) ·
+     write the classification for each box (typed input) ·
+     solve the crossword clues (PRINT-ONLY, crossword-style boxes) ·
+     colour the words by group (PRINT-ONLY, parent-graded — see AGENTS.md).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classifications — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* matching widget (byte-identical to homes.html / occupations.html) */
+  .match { position:relative; display:flex; justify-content:space-between; gap:90px; max-width:560px; margin:6px 0 10px; }
+  .mcol { display:flex; flex-direction:column; gap:16px; z-index:2; }
+  .colhead { font-family:Verdana,sans-serif; font-size:10.5pt; font-weight:bold; color:#666; text-align:center; margin-bottom:4px; }
+  .mitem { font:inherit; font-size:15pt; padding:8px 14px; border:2.5px solid var(--ink); border-radius:12px; background:#fff; cursor:pointer; min-width:112px; text-align:center; }
+  .mitem.msel { background:#fde68a; }
+  .mitem.mk-correct { border-color:var(--right); background:#bbf7d0; }
+  .mitem.mk-incorrect { border-color:var(--wrong); background:#fecaca; }
+  .mlines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+  @media print { .mitem.mk-correct, .mitem.mk-incorrect { background:#fff; border-color:var(--ink); } }
+  .match .mleft { line-height:1.35; min-width:150px; }
+  .match .mright { min-width:130px; }
+
+  /* Section 2: word-set box + typed classification */
+  .clsbox { background:#eef1f5; border:1px solid #aab2bd; border-radius:8px; padding:8px 16px; display:inline-block; margin:8px 12px 8px 0; font-weight:bold; }
+  input.ans.word { font:inherit; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:190px; text-align:center; }
+
+  /* Section 3: crossword-style clue boxes (PRINT-ONLY) */
+  .xdir { font-family:Verdana,sans-serif; font-size:9pt; font-weight:bold; color:#fff; background:var(--accent); border-radius:4px; padding:2px 8px; margin-right:6px; letter-spacing:.5px; vertical-align:middle; }
+  .xrow { display:inline-flex; gap:3px; margin:8px 0 0; vertical-align:middle; }
+  .xbox { box-sizing:border-box; width:26px; height:30px; border:2px solid var(--ink); display:inline-flex; align-items:center; justify-content:center; font-family:'Courier New',monospace; font-weight:bold; font-size:14pt; text-transform:uppercase; background:#fff; }
+  .xbox.given { background:#eef2ff; }
+  .xgrid-demo { display:inline-grid; grid-auto-columns:28px; grid-auto-rows:28px; gap:2px; margin:10px 0 4px; vertical-align:top; }
+  .xcell { box-sizing:border-box; border:2px solid var(--ink); display:flex; align-items:center; justify-content:center; font-family:'Courier New',monospace; font-weight:bold; font-size:13pt; background:#fff; }
+
+  /* Section 4: colour-by-group word tiles (PRINT-ONLY) */
+  .item.groupword { display:inline-flex; align-items:center; gap:10px; border:2px solid var(--ink); border-radius:12px; padding:7px 16px; margin:0 10px 10px 0; }
+  .groupword .label { font-size:11pt; color:#666; }
+  .colordot { width:22px; height:22px; border:2px solid #888; border-radius:50%; background:#fff; display:inline-block; }
+
+  @media print {
+    .clsbox { background:#fff; border-color:var(--ink); }
+    .xbox.given { background:#fff; }
+  }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🗂️ Classifications — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Tap a word set on the left, then tap its classification on the right.">Match <input type="number" id="f-match" min="0" max="6"></label>
+      <label data-tip="Look at the words in the box and write their classification.">Write <input type="number" id="f-write" min="0" max="8"></label>
+      <label data-tip="Print-only crossword: solve each clue and write the word in the boxes; a grown-up marks it.">Crossword ✍️ <input type="number" id="f-puzzle" min="0" max="8"></label>
+      <label data-tip="Print-only: colour each word by its group with coloured pencils; a grown-up marks it.">Colour groups ✍️ <input type="number" id="f-groups" min="0" max="18"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap a word set, then tap its classification; type the classification for each box. The last two sections are done on the printout (a grown-up marks them). Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Classifications</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🗂️⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  match:  WS.clamp(WS.toInt(WS.Q.get('match'),  5), 0, 6),
+  write:  WS.clamp(WS.toInt(WS.Q.get('write'),  4), 0, 8),
+  puzzle: WS.clamp(WS.toInt(WS.Q.get('puzzle'), 4), 0, 8),
+  groups: WS.clamp(WS.toInt(WS.Q.get('groups'), 8), 0, 18) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle, balanced } = WS.helpers(rng);
+
+/* ---- Section 1: matching widget (reusable — see AGENTS.md) ---- */
+/* PAIRS: {v: left prompt (a word set), p: right answer (its classification)}.
+   Reproduces p.109 "Match each set of words with the correct classification." verbatim (6 sets). */
+const PAIRS = [
+  {v:'sandals<br>slippers<br>boots',  p:'footwear'},
+  {v:'pineapple<br>banana<br>orange', p:'fruits'},
+  {v:'China<br>France<br>Japan',      p:'countries'},
+  {v:'chair<br>table<br>shelf',       p:'furniture'},
+  {v:'lion<br>tiger<br>cheetah',      p:'meat eaters'},
+  {v:'sparrow<br>parrot<br>ostrich',  p:'birds'},
+];
+const MATCH_HEADS = ['Word set', 'Classification'];
+function buildMatch(count){
+  if (count <= 0) return '';
+  const chosen = shuffle(PAIRS).slice(0, count);
+  const rights = shuffle(chosen.map(c => c.p));
+  const leftHtml = chosen.map(c => '<button type="button" class="mitem mleft" data-answer="'+c.p+'">'+c.v+'</button>').join('');
+  const rightHtml = rights.map(p => '<button type="button" class="mitem mright" data-val="'+p+'">'+p+'</button>').join('');
+  return '<h2>Match each set of words with the correct classification</h2>'
+    + '<div id="sec-match" class="match"><svg class="mlines"></svg>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[0]+'</div>'+leftHtml+'</div>'
+    + '<div class="mcol"><div class="colhead">'+MATCH_HEADS[1]+'</div>'+rightHtml+'</div></div>';
+}
+function lineColor(l){ return l.classList.contains('mk-correct') ? 'var(--right)' : l.classList.contains('mk-incorrect') ? 'var(--wrong)' : 'var(--accent)'; }
+function drawMatch(m){
+  const svg = m.querySelector('.mlines'); svg.innerHTML = '';
+  const box = m.getBoundingClientRect();
+  m.querySelectorAll('.mleft').forEach(l => {
+    if (!l.dataset.conn) return;
+    const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+    if (!r) return;
+    const lr = l.getBoundingClientRect(), rr = r.getBoundingClientRect();
+    const line = document.createElementNS(SVGNS, 'line');
+    line.setAttribute('x1', lr.right - box.left); line.setAttribute('y1', lr.top + lr.height/2 - box.top);
+    line.setAttribute('x2', rr.left - box.left);  line.setAttribute('y2', rr.top + rr.height/2 - box.top);
+    line.setAttribute('stroke', lineColor(l)); line.setAttribute('stroke-width', '4'); line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+  });
+}
+function wireMatch(){
+  document.querySelectorAll('.match').forEach(m => {
+    let sel = null;
+    m.querySelectorAll('.mleft').forEach(l => l.addEventListener('click', () => {
+      m.querySelectorAll('.mleft').forEach(x => x.classList.remove('msel')); sel = l; l.classList.add('msel');
+    }));
+    m.querySelectorAll('.mright').forEach(r => r.addEventListener('click', () => {
+      if (!sel) return;
+      sel.dataset.conn = r.dataset.val; sel.classList.remove('msel','mk-correct','mk-incorrect'); r.classList.remove('mk-correct','mk-incorrect');
+      sel = null; drawMatch(m);
+    }));
+  });
+  window.addEventListener('resize', () => document.querySelectorAll('.match').forEach(drawMatch));
+}
+function resetMatch(){
+  document.querySelectorAll('.match .mleft').forEach(l => { delete l.dataset.conn; l.classList.remove('msel','mk-correct','mk-incorrect'); });
+  document.querySelectorAll('.match .mright').forEach(r => r.classList.remove('mk-correct','mk-incorrect'));
+  document.querySelectorAll('.match .mlines').forEach(s => s.innerHTML = '');
+}
+function markMatch(){ let total = 0, right = 0;
+  document.querySelectorAll('#sec-match').forEach(m => {
+    m.querySelectorAll('.mleft').forEach(l => { total++;
+      const ok = l.dataset.conn === l.dataset.answer;
+      l.classList.remove('mk-correct','mk-incorrect'); l.classList.add(ok ? 'mk-correct' : 'mk-incorrect');
+      const r = [...m.querySelectorAll('.mright')].find(e => e.dataset.val === l.dataset.conn);
+      if (r) { r.classList.remove('mk-correct','mk-incorrect'); r.classList.add(ok ? 'mk-correct' : 'mk-incorrect'); }
+      if (ok) right++;
+    });
+    drawMatch(m);
+  });
+  return { total, right };
+}
+window.__wsAutoSolve = function(){
+  document.querySelectorAll('.match .mleft').forEach(l => { l.dataset.conn = l.dataset.answer; });
+  document.querySelectorAll('.match').forEach(drawMatch);
+};
+
+/* ---- Sections 2 & 3 share one pool: the 8 classification word-boxes from p.110/p.111 ---- */
+/* CATS: {words: the box's member words, ans: the classification, alt: fair alternatives}. */
+const CATS = [
+  {words:['red','purple','black'],              ans:'colours',    alt:['colors']},
+  {words:['spinach','cabbage','broccoli'],       ans:'vegetables', alt:['veggies']},
+  {words:['cars','trucks','buses'],              ans:'vehicles',   alt:['transport']},
+  {words:['forks','spoons','knives'],            ans:'cutlery',    alt:['utensils']},
+  {words:['Hari Raya','Deepavali','Christmas'],  ans:'festivals',  alt:['celebrations']},
+  {words:['India','Australia','Spain'],          ans:'countries',  alt:['nations']},
+  {words:['circle','triangle','square'],         ans:'shapes',     alt:[]},
+  {words:['mango','watermelon','strawberry'],    ans:'fruits',     alt:[]},
+];
+
+/* ---- Section 2: write the classification for each box (typed input, |-alternatives) ---- */
+const writeOrder = shuffle(CATS);
+function gWrite(i){
+  const t = writeOrder[(i-1) % writeOrder.length];
+  const ans = [t.ans].concat(t.alt).join('|');
+  const words = t.words.map(w => '<b>'+w+'</b>').join(', ');
+  return '<div class="item"><span class="label">'+i+'.</span> What is the classification for these words?'
+    + '<div class="clsbox">'+words+'</div>'
+    + '<span class="field">Classification: <input class="ans word gradable" data-answer="'+ans+'" type="text" autocomplete="off"></span>'
+    + '</div>';
+}
+
+/* ---- Section 3: solve the crossword clues (PRINT-ONLY — crossword-style boxes, first letter given) ---- */
+const puzzleOrder = shuffle(CATS);
+const puzzleDir = balanced(['Across','Down']);
+function gPuzzle(i){
+  const t = puzzleOrder[(i-1) % puzzleOrder.length];
+  const word = t.ans;
+  const boxes = word.split('').map((ch,k) => '<span class="xbox'+(k===0?' given':'')+'">'+(k===0?ch.toUpperCase():'')+'</span>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> <span class="xdir">'+puzzleDir(i)+'</span> '+t.words.join(', ')
+    + '<div class="xrow">'+boxes+'</div></div>';
+}
+/* a small static demo grid — COLOURS (across, fully given, p.111's worked example) crossing
+   CUTLERY (down, first letter given) at the shared "L" — illustrates the crossword mechanic */
+function xgridDemo(){
+  const cells = [
+    {r:1,c:3,ch:'C',given:true},  {r:2,c:3,ch:'',given:false}, {r:3,c:3,ch:'',given:false},
+    {r:4,c:1,ch:'C',given:true},  {r:4,c:2,ch:'O',given:true}, {r:4,c:3,ch:'L',given:true},
+    {r:4,c:4,ch:'O',given:true},  {r:4,c:5,ch:'U',given:true}, {r:4,c:6,ch:'R',given:true}, {r:4,c:7,ch:'S',given:true},
+    {r:5,c:3,ch:'',given:false},  {r:6,c:3,ch:'',given:false}, {r:7,c:3,ch:'',given:false},
+  ];
+  return '<div class="xgrid-demo">' + cells.map(x =>
+    '<span class="xcell" style="grid-column:'+x.c+';grid-row:'+x.r+'">'+(x.given?x.ch:'')+'</span>'
+  ).join('') + '</div>';
+}
+
+/* ---- Section 4: colour the words by group (PRINT-ONLY — word tiles drawn from a pool) ---- */
+/* GROUPS: reproduces p.112's 18 scattered words across its 5 groups (planets/fruits/vehicles/
+   furniture/stationery); the colour-per-group legend is the teach block, not shown per-word. */
+const GROUPS = [
+  {w:'Earth',   g:'planets'},    {w:'Jupiter', g:'planets'},    {w:'Mars',     g:'planets'},
+  {w:'grape',   g:'fruits'},     {w:'banana',  g:'fruits'},     {w:'papaya',   g:'fruits'},    {w:'orange', g:'fruits'},
+  {w:'car',     g:'vehicles'},   {w:'truck',   g:'vehicles'},   {w:'van',      g:'vehicles'},  {w:'bus',    g:'vehicles'},
+  {w:'chair',   g:'furniture'},  {w:'table',   g:'furniture'},  {w:'bed',      g:'furniture'}, {w:'cupboard', g:'furniture'},
+  {w:'paper',   g:'stationery'}, {w:'pencil',  g:'stationery'}, {w:'pen',      g:'stationery'},
+];
+const groupOrder = shuffle(GROUPS);
+function gGroup(i){
+  const t = groupOrder[(i-1) % groupOrder.length];
+  return '<div class="item groupword"><span class="label">'+i+'.</span> <b>'+t.w+'</b> <span class="colordot"></span></div>';
+}
+
+/* ---- build the sheet: teach, then practise ---- */
+let html = '';
+html += WS.teach('Classifications',
+  'We <b>classify</b> or group things together according to their similar features or qualities.<br>'
+  + '<span class="ex">sandals, slippers, boots &rarr; <b>footwear</b></span>');
+html += buildMatch(cfg.match);
+
+html += WS.teach('Write the classification',
+  'Look at the words in the box. What group do they belong to? Write the classification.<br>'
+  + '<span class="ex">red, purple, black &rarr; <b>colours</b></span>');
+html += WS.section('Write the correct classification for each box', cfg.write, gWrite);
+
+html += WS.teach('On paper ✍️',
+  'Solve each crossword clue on the printed sheet and write the classification word in the boxes — '
+  + 'a grown-up marks it. Here is part of the puzzle already solved for you, the same way your workbook shows it:'
+  + xgridDemo() + '<div>Now solve the clues below the same way — the first letter is given.</div>');
+html += WS.section('Solve the crossword clues', cfg.puzzle, gPuzzle);
+
+html += WS.teach('On paper ✍️',
+  'The words below can be classified into 5 groups. Colour each word with coloured pencils on the '
+  + 'printed sheet — a grown-up marks it.<br>'
+  + 'Colour all the <b>planets</b> grey (like Earth, Jupiter and Mars). Colour all the <b>fruits</b> red. '
+  + 'Colour all the <b>vehicles</b> yellow. Colour all the <b>furniture</b> green. Colour all the <b>stationery</b> orange.');
+html += WS.section('Colour the words by group', cfg.groups, gGroup);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • classifications';
+
+/* ---- wiring ---- */
+wireMatch();
+WS.wireChips();
+WS.wirePanel(cfg, ['match','write','puzzle','groups'], {
+  mark:  () => WS.mark({ extras: [markMatch] }),
+  clear: () => WS.clearAll(resetMatch),
+});
+</script>
+</body>
+</html>

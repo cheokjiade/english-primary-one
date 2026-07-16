@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 39 — Multiple-Choice. Primary One English (COMPREHENSION).
+     Read a short passage, then choose the correct answer to a question about it
+     (chip-select one, four options numbered (1)-(4), matching the workbook layout).
+     Copied from beginning-sounds.html. See AGENTS.md.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multiple-Choice — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* multiple-choice-specific components (shared style is in worksheet.css) */
+  .passage-box { border:2px solid var(--ink); border-radius:10px; padding:10px 14px; margin:8px 0 10px; background:#fafafa; font-size:14pt; line-height:1.5; }
+  .qline { font-weight:bold; margin:10px 0 8px; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .chip.mcqchip { font-size:14.5pt; }
+  @media print { .passage-box { background:#fff; } }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔘 Multiple-Choice — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the short passage, then tap the numbered option — (1), (2), (3) or (4) — that correctly answers the question.">Choose the answer <input type="number" id="f-mcq" min="0" max="15"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Read the passage in the box, then tap the numbered answer that is correct. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Multiple-Choice</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔘⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  mcq: WS.clamp(WS.toInt(WS.Q.get('mcq'), 5), 0, 15) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- source passages (Unit 39, pages 168-173) ---- */
+const PASSAGES = [
+  "Colin has a puppy. He loves his little puppy. Its fur is all white. Colin names his puppy ‘Snowy’. Snowy is very playful. It likes to jump on Colin. It licks Colin on his nose. It enjoys going for walks with Colin in the evening. Snowy barks and wags its tail happily when Colin comes home from school.",
+  "It was Mother’s birthday. Kevin and Jean went to the florist to buy a bouquet of flowers for their mother. There were many different kinds of flowers in the shop. They were all very beautiful. After a while, they decided to buy a bouquet of red roses for their mother. They went home to also make a card for her. What a wonderful surprise it was for their mother!",
+  "It is Sunday morning. The Lim family is at the beach. They love to splash and play in the cool water. Then the family sits on a large picnic mat to enjoy the picnic lunch. There are sandwiches, noodles, chicken wings, jellies and drinks. After eating, they all help to clean up. They throw all the rubbish into the bin nearby. Mother says that everyone should help to keep the beach clean for others to enjoy the beach as well."
+];
+
+/* ---- the 15 book questions (pool); `ans` is the 0-based index of the correct option ---- */
+const QUESTIONS = [
+  { p:0, q:'Colin has a ___.', opts:['kitten','puppy','turtle','chick'], ans:1 },
+  { p:0, q:'Colin’s pet is named ‘Snowy’ because it is ___.', opts:['black','brown','white','beige'], ans:2 },
+  { p:0, q:'Snowy likes to go for ___ with Colin.', opts:['walks','games','swims','runs'], ans:0 },
+  { p:0, q:'Colin takes Snowy out in the ___.', opts:['mornings','evenings','afternoons','nights'], ans:1 },
+  { p:0, q:'Snowy is ___ to see Colin when he comes home.', opts:['happy','angry','sad','nervous'], ans:0 },
+
+  { p:1, q:'Kevin and Jean wanted to buy a bouquet of flowers for their ___.', opts:['mother','florist','father','grandmother'], ans:0 },
+  { p:1, q:'The bouquet of flowers was ___ present.', opts:['an anniversary','a birthday','a New Year','a Christmas'], ans:1 },
+  { p:1, q:'They bought the flowers from a ___.', opts:['hawker','fruit seller','barber','florist'], ans:3 },
+  { p:1, q:'Another word for ‘beautiful’ is ___.', opts:['ugly','sweet','pretty','cute'], ans:2 },
+  { p:1, q:'The birthday card was ___.', opts:['bought','sewn','torn','handmade'], ans:3 },
+
+  { p:2, q:'The Lim family is at the beach on a ___.', opts:['Saturday morning','Saturday afternoon','Sunday morning','Sunday afternoon'], ans:2 },
+  { p:2, q:'After the picnic, they throw the rubbish into the ___.', opts:['sea','bin','car','basket'], ans:1 },
+  { p:2, q:'They sat on the ___ to enjoy their picnic.', opts:['bench','grass','sand','mat'], ans:3 },
+  { p:2, q:'The Lim family had ___ on the beach.', opts:['breakfast','lunch','tea','dinner'], ans:1 },
+  { p:2, q:'Leaving the picnic ground clean after using it shows that they are ___.', opts:['responsible','clever','neat','honest'], ans:0 }
+];
+
+/* ---- Section: read the passage, choose the correct answer (chip-select, one answer) ---- */
+/* Distinct QUESTION per item: a shuffled pool of all 15 question indices, indexed by question
+   number (like nameTargets in beginning-sounds.html), guarantees no two items repeat. */
+function fmtQ(q){ return q.replace('___', '<span class="blankmark">___</span>'); }
+const mcqOrder = shuffle(QUESTIONS.map((_, idx) => idx));
+function gMcq(i){
+  const Q = QUESTIONS[mcqOrder[(i-1) % mcqOrder.length]];
+  const chips = Q.opts.map((opt, k) =>
+    '<button type="button" class="chip mcqchip" data-ok="' + (k === Q.ans ? 1 : 0) + '">(' + (k+1) + ') ' + opt + '</button>'
+  ).join('');
+  return '<div class="item"><span class="label">'+i+'.</span> '
+    + '<div class="passage-box">'+PASSAGES[Q.p]+'</div>'
+    + '<div class="qline">'+fmtQ(Q.q)+'</div>'
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div>'
+    + '</div>';
+}
+
+/* ---- build the sheet: teach, then practise (teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Multiple-choice',
+  'Read the passage carefully. Then answer the questions.<br>'
+  + 'Choose the correct answer — tap <b>(1)</b>, <b>(2)</b>, <b>(3)</b> or <b>(4)</b>.<br>'
+  + '<span class="ex"><b>Example:</b> Colin has a ___. (1) kitten <b>(2) puppy</b> (3) turtle (4) chick &rarr; tap <b>(2) puppy</b>.</span>');
+html += WS.section('Choose the correct answer', cfg.mcq, gMcq);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • multiple choice';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();          // tappable chips (radio for data-mode="one")
+WS.wirePanel(cfg, ['mcq'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

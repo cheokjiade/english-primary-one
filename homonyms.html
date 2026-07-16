@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 30 — Homonyms. Primary One English (VOCABULARY).
+     Tick the correct homonym (chip-select one, sentence + blank) +
+     Fix the homonym (typed input; the wrong homonym is shown bold, write the right one).
+     Copied from beginning-sounds.html / parents-and-young.html. See AGENTS.md.
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homonyms — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* homonyms-specific components (shared style is in worksheet.css) */
+  .qrow { display:flex; align-items:center; justify-content:flex-start; gap:14px; flex-wrap:wrap; margin-top:6px; }
+  img.pic { width:56px; height:56px; }
+  img.mini { width:22px; height:22px; }
+  .lorries { display:inline-flex; flex-wrap:wrap; gap:3px; max-width:112px; vertical-align:middle; }
+  input.ans.word { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:130px; }
+  .chip.wordchip { font-size:16pt; }
+  .blankmark { letter-spacing:1px; font-weight:bold; }
+  .wrongword { color:var(--wrong); text-decoration:underline; text-decoration-style:wavy; text-decoration-color:var(--wrong); }
+  @media print { .wrongword { color:var(--ink); text-decoration-color:var(--ink); } }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🎭 Homonyms — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Read the sentence and tap the homonym that fits — they sound the same but mean different things.">Tick the homonym <input type="number" id="f-tick" min="0" max="12"></label>
+      <label data-tip="The bold word is the wrong homonym. Type the correct spelling in the box.">Fix the homonym <input type="number" id="f-fix" min="0" max="6"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Tap the homonym that fits the sentence; type the correct spelling for the bold word. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Homonyms</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🎭⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  tick: WS.clamp(WS.toInt(WS.Q.get('tick'), 5), 0, 12),
+  fix:  WS.clamp(WS.toInt(WS.Q.get('fix'),  4), 0, 6) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- picture vocabulary (Twemoji, bundled offline under assets/twemoji/) ---- */
+const TW   = cp => 'assets/twemoji/' + cp + '.svg';
+const pic  = cp => '<img class="pic" src="' + TW(cp) + '" alt="">';
+const mini = cp => '<img class="mini" src="' + TW(cp) + '" alt="">';
+
+/* ---- Section 1: tick the correct homonym (chip-select, one answer) ---- */
+/* Every entry is a distinct sentence; a shuffled pool indexed by question number (like nameTargets
+   in beginning-sounds.html) guarantees no two questions in the section repeat. */
+const TICK = [
+  { pre:'The wind ',                                  post:' my hat away.',              correct:'blew',  wrong:'blue' },
+  { pre:'I have a kite. It is ',                       post:' in colour.',                 correct:'blue',  wrong:'blew' },
+  { pre:'Have you seen my ',                           post:' of glasses?',                correct:'pair',  wrong:'pear' },
+  { pre:'The chicks say ',                             post:'.',                           correct:'"cheep, cheep"', wrong:'"cheap, cheap"' },
+  { pre:'Clean up the ',                               post:'.',                           correct:'mess',  wrong:'mass' },
+  { pre:'My sister saw a ',                            post:' in the zoo.',                correct:'deer',  wrong:'dear' },
+  { pre:'I can ',                                      post:' a rabbit behind the bush.',  correct:'see',   wrong:'sea' },
+  { pre:'Jack and Jill went up the hill to fetch a ',  post:' of water.',                  correct:'pail',  wrong:'pale' },
+  { pre:'Who broke the window ',                       post:'?',                           correct:'pane',  wrong:'pain' },
+  { pre:'It is rude to ',                              post:' at others.',                 correct:'stare', wrong:'stair' },
+  { pre:'Please ',                                     post:' here for your teacher.',     correct:'wait',  wrong:'weight' },
+  { pre:'We went to the ',                             post:' for a picnic.',              correct:'beach', wrong:'beech' },
+];
+const tickOrder = shuffle(TICK);
+function gTick(i){
+  const t = tickOrder[(i-1) % tickOrder.length];
+  const opts = shuffle([{ w:t.correct, ok:true }, { w:t.wrong, ok:false }]);
+  const chips = opts.map(o => '<button type="button" class="chip wordchip" data-ok="'+(o.ok?1:0)+'">'+o.w+'</button>').join('');
+  const sentence = t.pre + '<span class="blankmark">___</span>' + t.post;
+  return '<div class="item"><span class="label">'+i+'.</span> ' + sentence
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div></div>';
+}
+
+/* ---- Section 2: fix the homonym (typed input, default `text` kind) ---- */
+/* The bold word is wrong; the child writes the correct homonym. Distinct per pool item as above. */
+const FIX = [
+  { pre:'Molly has long ',                wrong:'hare', post:'.',                 answer:'hair',  cp:'1f471' },
+  { pre:'My hamster has brown ',          wrong:'fir',  post:'.',                 answer:'fur',   cp:'1f439' },
+  { pre:'My favourite fruit is ',         wrong:'pair', post:'.',                 answer:'pear',  cp:'1f350' },
+  { pre:'The birds are flying over the ', wrong:'see',  post:'.',                 answer:'sea',   cp:'1f30a' },
+  { pre:'George has ',                    wrong:'ate',  post:' toy lorries.',     answer:'eight', cp:'1f69a', many:8 },
+  { pre:'The ',                           wrong:'son',  post:' shines brightly.', answer:'sun',   cp:'2600' },
+];
+const fixOrder = shuffle(FIX);
+function gFix(i){
+  const t = fixOrder[(i-1) % fixOrder.length];
+  const sentence = t.pre + '<b class="wrongword">' + t.wrong + '</b>' + t.post;
+  const picHtml = t.many
+    ? '<span class="lorries">' + Array(t.many).fill(0).map(() => mini(t.cp)).join('') + '</span>'
+    : pic(t.cp);
+  return '<div class="item"><span class="label">'+i+'.</span> ' + sentence
+    + '<div class="qrow">' + picHtml
+    + '<span class="field">Correct word: <input class="ans word gradable" data-answer="'+t.answer+'" type="text" autocomplete="off"></span>'
+    + '</div></div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Homonyms',
+  'Homonyms are words that have the <b>same sound</b> (pronunciation) but <u>different meanings</u> '
+  + '(and often different spellings).<br>'
+  + '<span class="ex"><b>blew</b> (the wind blew) vs <b>blue</b> (a colour)</span>');
+html += WS.section('Tick the correct homonym', cfg.tick, gTick);
+
+html += WS.teach('Spot the mistake',
+  'Sometimes the wrong homonym sneaks into a sentence! Read the sentence, look at the <b>bold</b> word, '
+  + 'and write the homonym that should be there instead.<br>'
+  + '<span class="ex">Molly has long <b>hare</b> &rarr; <b>hair</b></span>');
+html += WS.section('Fix the homonym', cfg.fix, gFix);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • homonyms';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();          // tappable chips (radio for data-mode="one")
+WS.wirePanel(cfg, ['tick','fix'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

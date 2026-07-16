@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 31 — Similes. Primary One English (VOCABULARY).
+     Built from beginning-sounds.html; see specs/similes.md.
+     Two sections: complete the simile (typed input, fill noun OR adjective
+     from a word bank — pages 135-136) · choose the correct word (chip-select
+     one, 3-option circle — page 137).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Similes — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f981.svg">
+<style>
+  .qrow { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:6px; }
+  img.pic { width:48px; height:48px; vertical-align:middle; margin-left:8px; }
+  .qrow img.pic { margin-left:0; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:100px; }
+  .chip.vchip { font-size:16pt; min-width:56px; }
+  .wordbank { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; background:#fff; border:2px solid var(--ink); border-radius:14px; padding:10px 16px; margin:10px 0; }
+  .wordbank .lbl { font-family:Verdana,sans-serif; font-weight:bold; font-size:10pt; color:#666; width:100%; margin-bottom:2px; }
+  .wordbank span:not(.lbl) { font-weight:bold; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🦁 Similes — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Use the word bank to fill in the blank and complete each simile.">Complete <input type="number" id="f-complete" min="0" max="13"></label>
+      <label data-tip="Tap the word that best completes each simile.">Choose <input type="number" id="f-choose" min="0" max="8"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Type the missing word (not case-sensitive); tap a word to choose it. Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Similes</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🦁⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  complete: WS.clamp(WS.toInt(WS.Q.get('complete'), 6), 0, 13),
+  choose:   WS.clamp(WS.toInt(WS.Q.get('choose'),   5), 0, 8) };
+
+const rng = WS.makeRng(cfg.seed);
+const { shuffle } = WS.helpers(rng);
+
+/* ---- picture vocabulary (Twemoji, bundled offline under assets/twemoji/) ---- */
+const TW  = cp => 'assets/twemoji/' + cp + '.svg';
+const pic = cp => cp ? '<img class="pic" src="'+TW(cp)+'" alt="">' : '';
+function wordbank(label, words){
+  return '<div class="wordbank"><span class="lbl">'+label+'</span>' + words.map(w => '<span>'+w+'</span>').join('') + '</div>';
+}
+
+/* ---- Section 1: complete the simile (typed input, default `text` kind) ---- */
+/* Reproduces BOTH fill-in pages: p.135 gives the adjective and asks for the animal NOUN;
+   p.136 gives the noun and asks for the ADJECTIVE. Each item keeps the book's own sentence,
+   so the pool is 13 distinct sentences (5 noun-blanks + 8 adjective-blanks). */
+const COMPLETE = [
+  {s:'My father is as brave as a ___.',                     a:'lion',   cp:'1f981'},
+  {s:'Tom is as playful as a ___.',                          a:'kitten', cp:'1f431'},
+  {s:'The little boy is as quiet as a ___.',                 a:'mouse',  cp:'1f42d'},
+  {s:'Mrs Tan is as busy as a ___.',                         a:'bee',    cp:'1f41d'},
+  {s:'Kathy is as gentle as a ___ with her baby cousin.',    a:'lamb',   cp:'1f411'},
+  {s:'The cotton wool is as ___ as a feather.',              a:'light',  cp:'1fab6'},
+  {s:"It's freezing! My hands are as ___ as ice.",           a:'cold',   cp:'1f9ca'},
+  {s:"The baby's cheeks are as ___ as a cherry.",            a:'red',    cp:'1f352'},
+  {s:'The fish bone is as ___ as a needle.',                 a:'sharp',  cp:'1faa1'},
+  {s:'This puzzle is as ___ as ABC.',                        a:'easy',   cp:null},
+  {s:'The orange juice is as ___ as honey.',                 a:'sweet',  cp:'1f36f'},
+  {s:'The applause was as ___ as thunder.',                  a:'loud',   cp:'26a1'},
+  {s:'The leaf is as ___ as a pancake.',                     a:'flat',   cp:'1f95e'},
+];
+const completeOrder = shuffle(COMPLETE);
+function gComplete(i){
+  const t = completeOrder[(i-1) % completeOrder.length];
+  const filled = t.s.replace('___', '<span class="field"><input class="ans gradable" data-answer="'+t.a+'" type="text" autocomplete="off"></span>');
+  return '<div class="item"><span class="label">'+i+'.</span> ' + filled + pic(t.cp) + '</div>';
+}
+
+/* ---- Section 2: choose the correct word (chip-select, one answer, 3 book options each) ---- */
+const CHOOSE = [
+  {opts:['bold','brave','bad'],     a:'brave', noun:'lion',     art:'a',  cp:'1f981'},
+  {opts:['swift','gentle','timid'], a:'timid', noun:'mouse',    art:'a',  cp:'1f42d'},
+  {opts:['busy','brave','slow'],    a:'busy',  noun:'ant',      art:'an', cp:'1f41c'},
+  {opts:['loyal','timid','strong'], a:'loyal', noun:'dog',      art:'a',  cp:'1f436'},
+  {opts:['cute','gentle','slow'],   a:'slow',  noun:'tortoise', art:'a',  cp:'1f422'},
+  {opts:['strong','fast','proud'],  a:'proud', noun:'peacock',  art:'a',  cp:'1f99a'},
+  {opts:['heavy','fierce','fast'],  a:'heavy', noun:'elephant', art:'an', cp:'1f418'},
+  {opts:['clever','blind','busy'],  a:'blind', noun:'bat',      art:'a',  cp:'1f987'},
+];
+const chooseOrder = shuffle(CHOOSE);
+function gChoose(i){
+  const t = chooseOrder[(i-1) % chooseOrder.length];
+  const opts = shuffle(t.opts.slice());
+  const chips = opts.map(o => '<button type="button" class="chip vchip" data-ok="'+(o===t.a?1:0)+'">'+o+'</button>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> As ___ as ' + t.art + ' <b>' + t.noun + '</b>.'
+    + '<div class="qrow">' + pic(t.cp)
+    + '<div class="sel-block" data-mode="one"><div class="chips">'+chips+'</div></div>'
+    + '</div></div>';
+}
+
+/* ---- build the sheet: teach, then practise (each teach block is ignored by marking + verifier) ---- */
+let html = '';
+html += WS.teach('Similes',
+  "A <b>simile</b> is a phrase (starting with <b>'as'</b> or <b>'like'</b>) that compares two different things.<br>"
+  + '<span class="ex">' + pic('1f981') + " My father is as <b>brave</b> as a <b>lion</b>.</span>"
+  + wordbank('Animal words', ['lion','kitten','mouse','bee','lamb'])
+  + wordbank('Describing words', ['flat','light','loud','sharp','cold','easy','sweet','red'])
+  + 'Use the words above to complete the similes below.');
+html += WS.section('Complete the simile', cfg.complete, gComplete);
+
+html += WS.teach('Choose the word',
+  'Tap the word that best completes each simile.<br>'
+  + '<span class="ex">' + pic('1f981') + ' As <b>brave</b> as a lion.</span>');
+html += WS.section('Choose the correct word', cfg.choose, gChoose);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • similes';
+
+/* ---- wiring (shared engine) ---- */
+WS.wireChips();
+WS.wirePanel(cfg, ['complete','choose'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>

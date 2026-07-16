@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- =====================================================================
+     Unit 41 — Word Order (Primary One English).
+     Built from beginning-sounds.html; see specs/word-order.md.
+     Two sections: rearrange word tiles into a complete sentence (drag/tap-to-order,
+     WS.enableDragOrder) · write the first word of a sentence with a capital letter
+     (typed input, custom case-sensitive `cap` kind — the LET'S LEARN rule made gradable).
+     ===================================================================== -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Order — Primary One English</title>
+<link rel="stylesheet" href="assets/worksheet.css">
+<link rel="icon" type="image/svg+xml" href="assets/twemoji/1f4d5.svg">
+<style>
+  /* word-order-specific components (topic style stays in the page; shared style is in worksheet.css) */
+  .fullstop { font-size:24pt; font-weight:bold; margin-left:2px; }
+  .jumble { color:#555; font-style:italic; }
+  input.ans { font:inherit; text-align:center; border:none; border-bottom:2px solid var(--ink); background:transparent; color:var(--ink); width:60px; }
+  input.ans.word { width:170px; }
+</style>
+</head>
+<body>
+<details class="panel no-print" id="ws-panel" open>
+  <summary>🔀 Word Order — options</summary>
+  <div class="panel-body">
+    <div class="backlink"><a href="index.html">&larr; All worksheets</a></div>
+    <div class="fields">
+      <label data-tip="A word or number that makes the worksheet. The same seed always makes the same sheet; leave blank for a random one.">Seed <input type="text" id="f-seed" placeholder="random"></label>
+      <label data-tip="Drag or tap the word tiles into the right order to make a complete sentence.">Word order <input type="number" id="f-order" min="0" max="17"></label>
+      <label data-tip="Read the jumbled words, then write the first word of the sentence with a capital letter.">Capital letter <input type="number" id="f-capital" min="0" max="17"></label>
+    </div>
+    <div class="btns">
+      <button class="go" id="b-apply">Generate</button>
+      <button id="b-random">🎲 Random seed</button>
+      <button class="primary" id="b-submit">✅ Submit &amp; Mark</button>
+      <button id="b-reset">Clear answers</button>
+      <button id="b-print">🖨️ Print</button>
+    </div>
+    <div class="hint">Drag or tap tiles to order them; type answers (capital letters matter in the second section). Same seed + settings = same worksheet.</div>
+  </div>
+</details>
+<div class="score" id="score"></div>
+<h1>Word Order</h1>
+<div class="meta-line" id="meta"></div>
+<div class="name-row"><div>Name: <span></span></div><div>Date: <span></span></div></div>
+<div id="sheet"></div>
+<div class="footer">Great work! 🔀⭐</div>
+
+<script src="assets/worksheet.js"></script>
+<script>
+"use strict";
+
+/* ---- config: one key per section, each maps 1:1 to a URL param + panel field + generator ---- */
+const cfg = { seed: WS.Q.get('seed') || WS.randomSeed(),
+  order:   WS.clamp(WS.toInt(WS.Q.get('order'),   6), 0, 17),
+  capital: WS.clamp(WS.toInt(WS.Q.get('capital'), 5), 0, 17) };
+
+const rng = WS.makeRng(cfg.seed);
+const { randInt, pick, shuffle, distinct, balanced } = WS.helpers(rng);
+
+/* case-sensitive answer: the sentence's first word (or first word-tile), capitalised exactly as the
+   book capitalises it — sentence-initial capital, or a proper-noun capital when the first tile is
+   itself a proper noun. Mirrors the LET'S LEARN rule (capital letter rule matters; `text` ignores case). */
+WS.addKind('cap', (v, a) => String(v||'').trim() === String(a||'').trim());
+
+/* ---- sentence pool (all 17 book sentences, pages 182-187). Each entry is the word tiles in the
+   correct order, chunked exactly as the book's tiles (multi-word proper/compound chunks stay one
+   tile: "Bird Park", "toy blocks", "over there", "Sarah's", "my father", "My mother", "I am",
+   "That man", "My friends", "a book", "to draw", "to play"). ---- */
+const SENTS = [
+  ['I','have','a','cat'],
+  ['He','has','a','robot'],
+  ['This','is','a','balloon'],
+  ['Ken','is','a','dentist'],
+  ['These','are',"Sarah's",'parents'],
+  ['I','walk','to','school'],
+  ['My','brother','likes','to draw'],
+  ['Jane','is','reading','a book'],
+  ['My mother','is','cooking','dinner'],
+  ['I am','playing','with','toy blocks'],
+  ['That man','over there','is','my father'],
+  ['We','are','at the','Bird Park'],
+  ['This','dress','is','beautiful'],
+  ['My friends','like','to play','football'],
+  ['This','is','a','thick','book'],
+  ['She','likes','to play','with','dolls'],
+  ['He','is','washing','his','hands'],
+];
+
+/* ---- Section 1: rearrange the word tiles into a complete sentence (drag / tap-to-order) ---- */
+/* Tile values are POSITIONS (1..n), so a sentence may safely repeat a word; slot k wants the tile
+   whose value is k. Distinct SENTENCE per question via a shuffled-pool index (no repeats while
+   count <= 17, the pool size). */
+const orderTargets = shuffle(SENTS);
+let oid = 0;
+function gOrder(i){
+  const s = orderTargets[(i-1) % orderTargets.length];
+  const id = 'ord' + (oid++);
+  const tiles = shuffle(s.map((w, k) => ({ w, v: String(k+1) })));
+  const src   = tiles.map(t => '<div class="dtile" data-val="'+t.v+'">'+t.w+'</div>').join('');
+  const slots = s.map((w, k) => '<div class="dslot" data-answer="'+(k+1)+'"></div>').join('');
+  return '<div class="item"><span class="label">'+i+'.</span> Rearrange the words to form a complete sentence.'
+    + '<div class="dorder" id="'+id+'">'
+    + '<div class="dsource">'+src+'</div>'
+    + '<div class="dslots">'+slots+'<span class="fullstop">.</span></div>'
+    + '</div></div>';
+}
+
+/* ---- Section 2: the LET'S LEARN rule, made gradable (typed input, custom case-sensitive `cap` kind) ---- */
+/* Shows the same sentence's word tiles with the FIRST one lowercased, in brackets; the child writes
+   just that first word, correctly capitalised. Any proper-noun tile elsewhere in the brackets keeps
+   its own capital (e.g. "Bird Park"), so the exercise isolates exactly one rule: capitalise the first
+   word of a sentence. Distinct SENTENCE per question via its own independent shuffled-pool index. */
+const capTargets = shuffle(SENTS);
+function gCapital(i){
+  const s = capTargets[(i-1) % capTargets.length];
+  const shown = s.map((w, k) => k===0 ? w.toLowerCase() : w).join(' / ');
+  return '<div class="item"><span class="label">'+i+'.</span> These jumbled words make a sentence: <span class="jumble">('+shown+')</span><br>'
+    + 'Write the <b>first</b> word of the sentence correctly.'
+    + '<span class="field"><input class="ans word gradable" data-kind="cap" data-answer="'+s[0]+'" type="text" autocomplete="off"></span></div>';
+}
+
+/* ---- build the sheet: teach, then practise ---- */
+let html = '';
+html += WS.teach('Building sentences',
+  'Put the word tiles in the right order to make a complete sentence.<br>'
+  + '<span class="ex"><b>have &middot; a &middot; cat &middot; I</b> &rarr; <b>I have a cat.</b></span>');
+html += WS.section('Rearrange the words', cfg.order, gOrder);
+
+html += WS.teach('Capital letters and full stops',
+  'A <b>capital letter</b> is used for the first letter of the first word in a sentence. '
+  + 'It is also used for proper nouns.<br>A <b>full stop (.)</b> is used at the end of a sentence.');
+html += WS.section('Begin with a capital letter', cfg.capital, gCapital);
+
+document.getElementById('sheet').innerHTML = html;
+document.getElementById('meta').textContent = 'seed: ' + cfg.seed + '  •  Primary One English • word order';
+
+/* ---- wiring (shared engine) ---- */
+WS.enableDragOrder();    // drag / tap-to-place tiles (section 1)
+WS.wirePanel(cfg, ['order','capital'], {
+  mark:  () => WS.mark(),
+  clear: () => WS.clearAll(),
+});
+</script>
+</body>
+</html>
